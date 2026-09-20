@@ -1,0 +1,11 @@
+@import 'tailwindcss';
+
+@source '../../js/website/**/*.{js,jsx}';
+@source '../../views/website/**/*.blade.php';
+@source '../../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../../storage/framework/views/*.php';
+
+@import './color.css';
+@import './style.css';
+@import './responsive.css';
+@import './animation.css';

@@ -1,0 +1,144 @@
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.fade-in {
+  animation: fade-in 220ms ease-out both;
+}
+
+.rise-in {
+  animation: rise-in 280ms ease-out both;
+}
+
+.rise-in-delay-1 {
+  animation-delay: 60ms;
+}
+
+.rise-in-delay-2 {
+  animation-delay: 120ms;
+}
+
+.rise-in-delay-3 {
+  animation-delay: 180ms;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.btn--primary,
+.btn--accent,
+.icon-btn,
+.category-card,
+.product-card {
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.offer-page__chip {
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.offer-page__hero .rise-in {
+  animation: rise-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.category-card:active,
+.product-card:active,
+.btn--primary:active,
+.btn--accent:active,
+.category-rail__item:active,
+.category-sub:active,
+.category-chip:active {
+  transform: scale(0.98);
+}
+
+.category-drawer {
+  transition:
+    transform 240ms ease,
+    visibility 240ms ease;
+}
+
+.category-rail__item,
+.category-sub,
+.category-chip {
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.help-chat__bubble {
+  animation: help-bubble-in 220ms ease-out both;
+}
+
+.help-chat__chip:active {
+  transform: scale(0.97);
+}
+
+@keyframes help-bubble-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-banner__slide {
+  transition: opacity 420ms ease;
+}
+
+.landscape-card {
+  transition: transform 180ms ease;
+}
+
+.landscape-card:hover {
+  transform: translateY(-2px);
+}
+
+.hero-banner__dot {
+  transition:
+    width 180ms ease,
+    background-color 180ms ease;
+}
+
+.admin-sidebar {
+  transition: transform 220ms ease;
+}
+
+.admin-nav-backdrop {
+  transition: opacity 180ms ease, visibility 180ms ease;
+}

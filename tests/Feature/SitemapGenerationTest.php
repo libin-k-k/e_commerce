@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Core\Seo\SitemapService;
 use App\Modules\Category\Models\Category;
 use App\Modules\Product\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -29,7 +30,7 @@ class SitemapGenerationTest extends TestCase
 
         $this->artisan('sitemap:generate')->assertSuccessful();
 
-        $path = public_path('sitemap.xml');
+        $path = app(SitemapService::class)->path();
         $this->assertFileExists($path);
 
         $xml = File::get($path);
@@ -48,7 +49,7 @@ class SitemapGenerationTest extends TestCase
             'is_unlaunched' => false,
         ]);
 
-        $xml = File::get(public_path('sitemap.xml'));
+        $xml = File::get(app(SitemapService::class)->path());
         $this->assertStringContainsString(route('products.show', ['product' => 'desk-lamp']), $xml);
     }
 }

@@ -17,4 +17,18 @@ return [
         'fee' => (float) env('DELIVERY_FEE', 99),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Sitemap
+    |--------------------------------------------------------------------------
+    |
+    | Where "sitemap:generate" and the product observer write the sitemap.
+    | It must stay inside public/ in production so /sitemap.xml is served.
+    |
+    */
+
+    'sitemap' => [
+        'path' => public_path('sitemap.xml'),
+    ],
+
 ];

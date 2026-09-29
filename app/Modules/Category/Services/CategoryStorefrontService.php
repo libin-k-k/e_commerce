@@ -21,26 +21,21 @@ class CategoryStorefrontService
         return $this->categories
             ->activeMainsWithChildren()
             ->map(function (Category $main): array {
-                $children = $main->children
-                    ->map(fn (Category $child): array => [
-                        'name' => $child->name,
-                        'slug' => $child->slug,
-                        'image' => $child->imageUrl() ?? $main->imageUrl(),
-                        'href' => '/products?category='.$child->slug,
-                    ])
-                    ->values()
-                    ->all();
-
                 return [
                     'id' => $main->slug,
                     'name' => $main->name,
-                    'tone' => $main->slug,
-                    'featuredTitle' => 'Featured',
-                    'featured' => array_slice($children, 0, 2),
-                    'sectionTitle' => 'All '.$main->name,
-                    'children' => $children,
                     'image' => $main->imageUrl(),
                     'href' => '/products?category='.$main->slug,
+                    'children' => $main->children
+                        ->map(fn (Category $child): array => [
+                            'name' => $child->name,
+                            'slug' => $child->slug,
+                            'image' => $child->imageUrl() ?? $main->imageUrl(),
+                            'href' => '/products?category='.$child->slug,
+                            'itemCount' => (int) ($child->launched_products_count ?? 0),
+                        ])
+                        ->values()
+                        ->all(),
                 ];
             })
             ->values()

@@ -35,11 +35,30 @@ class CategoryRepository implements CategoryRepositoryInterface
             ->where('is_active', true)
             ->with(['children' => fn ($query) => $query
                 ->where('is_active', true)
+                ->withCount(['subcategoryProducts as launched_products_count' => fn ($products) => $products
+                    ->where('is_unlaunched', false)])
                 ->orderBy('sort_order')
                 ->orderBy('name')])
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get();
+    }
+
+    public function findActiveBySlug(string $slug): ?Category
+    {
+        $activeChildren = fn ($query) => $query
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('name');
+
+        return Category::query()
+            ->where('slug', $slug)
+            ->where('is_active', true)
+            ->with([
+                'parent.children' => $activeChildren,
+                'children' => $activeChildren,
+            ])
+            ->first();
     }
 
     public function find(int $id): ?Category

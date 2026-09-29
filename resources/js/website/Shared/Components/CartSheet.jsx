@@ -131,8 +131,8 @@ export default function CartSheet({ open, onClose }) {
                         <p className="side-sheet__subtotal">
                             Subtotal <strong>{subtotalLabel}</strong>
                         </p>
-                        <Link href="/login" className="btn btn--primary btn--block" onClick={onClose}>
-                            Checkout
+                        <Link href="/cart" className="btn btn--primary btn--block" onClick={onClose}>
+                            View Cart
                         </Link>
                     </div>
                 ) : null}

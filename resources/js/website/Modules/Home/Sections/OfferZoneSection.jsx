@@ -4,14 +4,18 @@ export default function OfferZoneSection({ offers = [] }) {
     return (
         <section className="section offer-zone" aria-labelledby="offer-zone-title">
             <div className="section__header">
-                <h2 id="offer-zone-title" className="section__title">
-                    Offer Zone
-                    <span className="section__title-icon" aria-hidden="true">
-                        <BoltIcon />
-                    </span>
-                </h2>
+                <div className="section__heading">
+                    <h2 id="offer-zone-title" className="section__title">
+                        <span className="section__title-icon" aria-hidden="true">
+                            <BoltIcon />
+                        </span>
+                        Offer Zone
+                    </h2>
+                    <p className="section__subtitle">Limited time offers just for you!</p>
+                </div>
                 <Link href="/offers" className="section__link">
                     View all
+                    <ChevronIcon />
                 </Link>
             </div>
 
@@ -20,7 +24,7 @@ export default function OfferZoneSection({ offers = [] }) {
                     <Link
                         key={offer.slug}
                         href={`/products?category=${offer.slug}`}
-                        className="offer-card"
+                        className={`offer-card is-tone-${offer.tone ?? 'all'}`}
                     >
                         <span className="offer-card__badge">{offer.badge}</span>
                         {offer.image ? (
@@ -33,7 +37,12 @@ export default function OfferZoneSection({ offers = [] }) {
                         ) : (
                             <span className="offer-card__media" aria-hidden="true" />
                         )}
-                        <p className="offer-card__label">{offer.name}</p>
+                        <span className="offer-card__footer">
+                            <span className="offer-card__label">{offer.name}</span>
+                            <span className="offer-card__arrow" aria-hidden="true">
+                                <ArrowIcon />
+                            </span>
+                        </span>
                     </Link>
                 ))}
             </div>
@@ -43,8 +52,24 @@ export default function OfferZoneSection({ offers = [] }) {
 
 function BoltIcon() {
     return (
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M13 2L4 14h6l-1 8 10-14h-6l1-6z" />
+        </svg>
+    );
+}
+
+function ChevronIcon() {
+    return (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+    );
+}
+
+function ArrowIcon() {
+    return (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
     );
 }

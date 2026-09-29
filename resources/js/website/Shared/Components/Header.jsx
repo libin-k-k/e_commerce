@@ -1,18 +1,102 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import {
+    CloseIcon,
+    DiscoverSections,
+    ProductSuggestions,
+    RecentSearches,
+    productsSearchHref,
+    useProductSuggestions,
+    useRecentSearches,
+} from './SearchPanel';
 
-export default function Header({ current = 'home', onOpenCategories, onOpenCart, onOpenWishlist }) {
+const DESKTOP_SEARCH_QUERY = '(min-width: 768px)';
+
+const isDesktopSearch = () => window.matchMedia(DESKTOP_SEARCH_QUERY).matches;
+
+export default function Header({ current = 'home', onOpenCategories, onOpenCart, onOpenWishlist, onOpenSearch }) {
     const { appName, cartCount = 0, wishlistCount = 0, auth } = usePage().props;
     const [query, setQuery] = useState('');
+    const [panelOpen, setPanelOpen] = useState(false);
+    const formRef = useRef(null);
+    const inputRef = useRef(null);
+    const { recent, add, remove, clear } = useRecentSearches();
+    const { term, result, loading } = useProductSuggestions(query, panelOpen);
+
+    const closePanel = useCallback(() => setPanelOpen(false), []);
+
+    useEffect(() => {
+        if (!panelOpen) {
+            return undefined;
+        }
+
+        const onPointerDown = (event) => {
+            if (!formRef.current?.contains(event.target)) {
+                closePanel();
+            }
+        };
+        const onKeyDown = (event) => {
+            if (event.key === 'Escape') {
+                closePanel();
+                inputRef.current?.blur();
+            }
+        };
+        const onResize = () => {
+            if (!isDesktopSearch()) {
+                closePanel();
+            }
+        };
+
+        document.addEventListener('pointerdown', onPointerDown);
+        window.addEventListener('keydown', onKeyDown);
+        window.addEventListener('resize', onResize);
+
+        return () => {
+            document.removeEventListener('pointerdown', onPointerDown);
+            window.removeEventListener('keydown', onKeyDown);
+            window.removeEventListener('resize', onResize);
+        };
+    }, [panelOpen, closePanel]);
+
+    const openSearch = () => {
+        if (isDesktopSearch()) {
+            setPanelOpen(true);
+            return;
+        }
+
+        inputRef.current?.blur();
+        onOpenSearch?.();
+    };
+
+    const search = (value) => {
+        const q = value.trim();
+        add(q);
+        closePanel();
+        inputRef.current?.blur();
+        router.visit(productsSearchHref(q));
+    };
 
     const onSearch = (event) => {
         event.preventDefault();
-        const q = query.trim();
-        router.get('/products', q ? { q } : {});
+        search(query);
+    };
+
+    const selectRecent = (value) => {
+        setQuery(value);
+        search(value);
+    };
+
+    const clearQuery = () => {
+        setQuery('');
+        inputRef.current?.focus();
     };
 
     return (
         <header className="site-header">
+            {panelOpen
+                ? createPortal(<div className="search-backdrop" aria-hidden="true" onClick={closePanel} />, document.body)
+                : null}
             <div className="site-header__inner">
                 <button
                     type="button"
@@ -23,8 +107,14 @@ export default function Header({ current = 'home', onOpenCategories, onOpenCart,
                     <MenuIcon />
                 </button>
 
-                <Link href="/" className="site-header__brand">
-                    {appName}
+                <Link href="/" className="site-header__brand" aria-label={`${appName} home`}>
+                    <span className="site-header__logo" aria-hidden="true">
+                        <LogoIcon />
+                    </span>
+                    <span className="site-header__brand-copy">
+                        <span className="site-header__brand-name">{appName}</span>
+                        <span className="site-header__tagline">Shop More, Live Better</span>
+                    </span>
                 </Link>
 
                 <nav className="site-header__nav" aria-label="Primary">
@@ -56,23 +146,70 @@ export default function Header({ current = 'home', onOpenCategories, onOpenCart,
                 </nav>
 
                 <div className="site-header__tools">
-                    <form className="site-header__search" role="search" onSubmit={onSearch}>
+                    <form ref={formRef} className="site-header__search" role="search" onSubmit={onSearch}>
                         <label className="visually-hidden" htmlFor="app-search">
                             Search products
                         </label>
                         <div className="site-header__search-field">
                             <SearchIcon className="site-header__search-icon" />
                             <input
+                                ref={inputRef}
                                 id="app-search"
                                 className="site-header__search-input"
                                 type="search"
                                 name="q"
                                 value={query}
                                 onChange={(event) => setQuery(event.target.value)}
+                                onPointerDown={(event) => {
+                                    if (!isDesktopSearch()) {
+                                        event.preventDefault();
+                                    }
+
+                                    openSearch();
+                                }}
+                                onFocus={openSearch}
                                 placeholder="Search for products, brands and more"
                                 autoComplete="off"
                             />
+                            {query !== '' ? (
+                                <button
+                                    type="button"
+                                    className="site-header__search-clear"
+                                    aria-label="Clear search"
+                                    onClick={clearQuery}
+                                >
+                                    <CloseIcon />
+                                </button>
+                            ) : null}
                         </div>
+                        <button type="submit" className="site-header__search-btn" aria-label="Search">
+                            <SearchIcon className="site-header__search-btn-icon" />
+                            <span className="site-header__search-btn-label" aria-hidden="true">
+                                Search
+                            </span>
+                        </button>
+
+                        {panelOpen ? (
+                            <div className="search-dropdown">
+                                <div className="search-dropdown__discover">
+                                    <RecentSearches
+                                        recent={recent}
+                                        onSelect={selectRecent}
+                                        onRemove={remove}
+                                        onClear={clear}
+                                    />
+                                    <DiscoverSections onNavigate={closePanel} />
+                                </div>
+                                <div className="search-dropdown__products">
+                                    <ProductSuggestions
+                                        term={term}
+                                        result={result}
+                                        loading={loading}
+                                        onNavigate={closePanel}
+                                    />
+                                </div>
+                            </div>
+                        ) : null}
                     </form>
 
                     <button
@@ -135,6 +272,20 @@ export default function Header({ current = 'home', onOpenCategories, onOpenCart,
                 </div>
             </div>
         </header>
+    );
+}
+
+function LogoIcon() {
+    return (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M5 8h14l-1 12.5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 20.5L5 8z" fill="currentColor" />
+            <path
+                d="M9 10V6.5a3 3 0 0 1 6 0V10"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+            />
+        </svg>
     );
 }
 

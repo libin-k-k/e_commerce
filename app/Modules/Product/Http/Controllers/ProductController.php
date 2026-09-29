@@ -2,9 +2,11 @@
 
 namespace App\Modules\Product\Http\Controllers;
 
-use App\Core\Seo\SeoJsonLoader;
 use App\Http\Controllers\Controller;
+use App\Modules\Product\Http\Requests\ProductIndexRequest;
+use App\Modules\Product\Http\Requests\ProductSuggestionRequest;
 use App\Modules\Product\Services\ProductService;
+use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -12,15 +14,16 @@ class ProductController extends Controller
 {
     public function __construct(
         private readonly ProductService $productService,
-        private readonly SeoJsonLoader $seoJsonLoader,
     ) {}
 
-    public function index(): Response
+    public function index(ProductIndexRequest $request): Response
     {
-        return Inertia::render('Product/Pages/Index', [
-            'seo' => $this->seoJsonLoader->load('Modules/Product/index'),
-            'products' => $this->productService->listing(),
-        ]);
+        return Inertia::render('Product/Pages/Index', $this->productService->catalog($request->filters()));
+    }
+
+    public function suggestions(ProductSuggestionRequest $request): JsonResponse
+    {
+        return response()->json($this->productService->suggestions($request->term()));
     }
 
     public function show(string $product): Response

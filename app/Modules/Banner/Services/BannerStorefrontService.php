@@ -16,7 +16,8 @@ class BannerStorefrontService
      * @return array{
      *     heroBanners: list<array<string, mixed>>,
      *     landscapeBanners: list<array<string, mixed>>,
-     *     footerBanners: list<array<string, mixed>>
+     *     footerBanners: list<array<string, mixed>>,
+     *     dealsBanner: array<string, mixed>|null
      * }
      */
     public function forHome(): array
@@ -25,6 +26,7 @@ class BannerStorefrontService
             'heroBanners' => $this->forPosition(BannerPosition::Hero),
             'landscapeBanners' => $this->forPosition(BannerPosition::Middle),
             'footerBanners' => $this->forPosition(BannerPosition::Footer),
+            'dealsBanner' => $this->forPosition(BannerPosition::HomeDeals)[0] ?? null,
         ];
     }
 
@@ -38,6 +40,14 @@ class BannerStorefrontService
             ->map(fn (Banner $banner): array => $banner->toStorefrontArray())
             ->values()
             ->all();
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function forProductListing(): ?array
+    {
+        return $this->forPosition(BannerPosition::ProductListing)[0] ?? null;
     }
 
     /**

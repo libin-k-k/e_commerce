@@ -94,7 +94,7 @@ class CartWishlistGuestMergeTest extends TestCase
         ]);
     }
 
-    public function test_buy_now_opens_cart_sheet_flash(): void
+    public function test_buy_now_goes_to_the_cart_page(): void
     {
         $category = Category::factory()->create();
         $product = Product::factory()->create(['category_id' => $category->id, 'is_unlaunched' => false]);
@@ -104,7 +104,6 @@ class CartWishlistGuestMergeTest extends TestCase
                 'product_id' => $product->id,
                 'buy_now' => true,
             ])
-            ->assertRedirect(route('home'))
-            ->assertSessionHas('open_sheet', 'cart');
+            ->assertRedirect(route('cart.index'));
     }
 }

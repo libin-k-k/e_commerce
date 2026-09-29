@@ -2,22 +2,39 @@
 
 namespace App\Modules\Cart\Http\Controllers;
 
+use App\Core\Seo\SeoJsonLoader;
 use App\Http\Controllers\Controller;
+use App\Modules\Cart\Http\Requests\CartItemsRequest;
 use App\Modules\Cart\Http\Requests\StoreCartItemRequest;
 use App\Modules\Cart\Http\Requests\UpdateCartItemRequest;
 use App\Modules\Cart\Services\CartService;
+use App\Modules\Product\Repositories\Contracts\ProductRepositoryInterface;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class CartController extends Controller
 {
-    public function __construct(private readonly CartService $cart) {}
+    public const RecommendationLimit = 6;
 
-    public function index(): RedirectResponse
+    public function __construct(
+        private readonly CartService $cart,
+        private readonly ProductRepositoryInterface $products,
+        private readonly SeoJsonLoader $seoJsonLoader,
+    ) {}
+
+    public function index(Request $request): Response
     {
-        return redirect()
-            ->route('home')
-            ->with('open_sheet', 'cart');
+        return Inertia::render('Cart/Pages/Index', [
+            'seo' => $this->seoJsonLoader->load('Modules/Cart/index'),
+            'delivery' => $this->cart->deliveryRule(),
+            'recommendations' => $this->products->recommended(
+                $this->cart->productIds($request),
+                self::RecommendationLimit,
+            ),
+        ]);
     }
 
     public function store(StoreCartItemRequest $request): RedirectResponse
@@ -31,13 +48,11 @@ class CartController extends Controller
                 : null,
         );
 
-        $redirect = back()->with('success', 'Added to cart.');
-
         if ($request->boolean('buy_now')) {
-            return $redirect->with('open_sheet', 'cart');
+            return redirect()->route('cart.index')->with('success', 'Added to cart.');
         }
 
-        return $redirect;
+        return back()->with('success', 'Added to cart.');
     }
 
     public function update(UpdateCartItemRequest $request, int $item): RedirectResponse
@@ -52,5 +67,19 @@ class CartController extends Controller
         $this->cart->remove($request, $item);
 
         return back()->with('success', 'Item removed from cart.')->with('open_sheet', 'cart');
+    }
+
+    public function destroyMany(CartItemsRequest $request): RedirectResponse
+    {
+        $removed = $this->cart->removeMany($request, $request->itemIds());
+
+        return back()->with('success', $removed.' '.Str::plural('item', $removed).' removed from cart.');
+    }
+
+    public function moveToWishlist(CartItemsRequest $request): RedirectResponse
+    {
+        $moved = $this->cart->moveToWishlist($request, $request->itemIds());
+
+        return back()->with('success', $moved.' '.Str::plural('item', $moved).' moved to wishlist.');
     }
 }

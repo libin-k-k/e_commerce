@@ -53,6 +53,8 @@ jobs:
             # Pull first so custom maintenance view exists, then go into maintenance for composer/migrate
             trap 'php artisan up' EXIT INT TERM
             git fetch --all
+            # sitemap.xml is regenerated on the server; drop that copy so it never blocks the pull
+            git checkout -- public/sitemap.xml 2>/dev/null || true
             git checkout dev || git checkout -b dev origin/dev
             git pull origin dev
 
@@ -74,6 +76,7 @@ jobs:
             php artisan config:clear
             php artisan route:clear
             php artisan view:clear
+            php artisan sitemap:generate
 
             echo "Deployment finished!"
           EOF

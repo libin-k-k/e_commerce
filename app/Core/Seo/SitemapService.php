@@ -10,12 +10,17 @@ class SitemapService
 {
     public function refresh(): string
     {
-        $path = public_path('sitemap.xml');
-        $xml = $this->build();
+        $path = $this->path();
 
-        File::put($path, $xml);
+        File::ensureDirectoryExists(dirname($path));
+        File::put($path, $this->build());
 
         return $path;
+    }
+
+    public function path(): string
+    {
+        return (string) config('commerce.sitemap.path', public_path('sitemap.xml'));
     }
 
     public function build(): string

@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Modules\Cart\Models\CartItem;
 use App\Modules\Product\Models\Product;
 use App\Modules\Product\Models\ProductVariant;
+use App\Modules\Wishlist\Services\WishlistService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -15,11 +16,42 @@ use Illuminate\Validation\ValidationException;
 
 class CartService
 {
-    public function __construct(private readonly GuestDevice $guestDevice) {}
+    public const MaxQuantity = 99;
+
+    public function __construct(
+        private readonly GuestDevice $guestDevice,
+        private readonly WishlistService $wishlist,
+    ) {}
 
     public function count(Request $request): int
     {
         return (int) $this->ownerQuery($request)->sum('quantity');
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function productIds(Request $request): array
+    {
+        return $this->ownerQuery($request)
+            ->distinct()
+            ->pluck('product_id')
+            ->map(fn ($id): int => (int) $id)
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Free-delivery threshold and flat fee applied to smaller orders.
+     *
+     * @return array{freeAbove: float, fee: float}
+     */
+    public function deliveryRule(): array
+    {
+        return [
+            'freeAbove' => (float) config('commerce.delivery.free_above'),
+            'fee' => (float) config('commerce.delivery.fee'),
+        ];
     }
 
     /**
@@ -28,7 +60,7 @@ class CartService
     public function items(Request $request): Collection
     {
         return $this->ownerQuery($request)
-            ->with(['product.images', 'product.category', 'variant.size', 'variant.color'])
+            ->with(['product.images', 'product.category', 'product.subcategory', 'variant.size', 'variant.color'])
             ->orderByDesc('id')
             ->get()
             ->map(fn (CartItem $item): array => $this->toArray($item))
@@ -82,6 +114,36 @@ class CartService
     public function remove(Request $request, int $itemId): void
     {
         $this->findOwnedItemOrFail($request, $itemId)->delete();
+    }
+
+    /**
+     * Remove the given cart lines; ids that belong to someone else are ignored.
+     *
+     * @param  list<int>  $itemIds
+     */
+    public function removeMany(Request $request, array $itemIds): int
+    {
+        return $this->ownerQuery($request)->whereKey($itemIds)->delete();
+    }
+
+    /**
+     * Save the given cart lines' products to the wishlist and drop them from the cart.
+     *
+     * @param  list<int>  $itemIds
+     */
+    public function moveToWishlist(Request $request, array $itemIds): int
+    {
+        $items = $this->ownerQuery($request)->whereKey($itemIds)->get();
+
+        DB::transaction(function () use ($request, $items): void {
+            foreach ($items->pluck('product_id')->unique() as $productId) {
+                $this->wishlist->add($request, (int) $productId);
+            }
+
+            CartItem::query()->whereKey($items->modelKeys())->delete();
+        });
+
+        return $items->count();
     }
 
     public function mergeGuestToUser(string $guestToken, User $user): void
@@ -180,7 +242,9 @@ class CartService
         $product = $item->product;
         $variant = $item->variant;
         $unit = $variant?->effectivePrice() ?? $product?->effectivePrice() ?? 0.0;
+        $mrp = max($unit, (float) ($variant?->price ?? $product?->price ?? 0));
         $line = $unit * $item->quantity;
+        $stock = $variant !== null ? (int) $variant->stock : ($product?->availableStock() ?? 0);
 
         return [
             'id' => $item->id,
@@ -190,13 +254,18 @@ class CartService
             'name' => $product?->name,
             'slug' => $product?->slug,
             'image' => $product?->mainImageUrl(),
+            'category' => $product?->subcategory?->name ?? $product?->category?->name,
             'size' => $variant?->size?->name,
             'color' => $variant?->color?->name,
             'unit_price' => $unit,
             'unit_price_label' => '₹'.number_format($unit, 2),
+            'unit_mrp' => $mrp,
             'line_total' => $line,
             'line_total_label' => '₹'.number_format($line, 2),
-            'in_stock' => $variant !== null ? $variant->stock > 0 : (($product?->availableStock() ?? 0) > 0),
+            'line_mrp' => $mrp * $item->quantity,
+            'discount_percent' => $mrp > $unit ? (int) round((1 - $unit / $mrp) * 100) : 0,
+            'max_quantity' => min(self::MaxQuantity, max($stock, $item->quantity)),
+            'in_stock' => $stock > 0,
         ];
     }
 }

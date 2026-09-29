@@ -87,6 +87,89 @@ class HomePageTest extends TestCase
             );
     }
 
+    public function test_home_page_shares_flash_deals_and_their_banner(): void
+    {
+        $category = Category::factory()->create();
+
+        Product::factory()->count(6)->create([
+            'category_id' => $category->id,
+            'price' => 99,
+            'sale_price' => 79,
+        ]);
+        Product::factory()->create([
+            'category_id' => $category->id,
+            'slug' => 'full-price-lamp',
+            'price' => 45,
+            'sale_price' => null,
+        ]);
+        Product::factory()->unlaunched()->create([
+            'category_id' => $category->id,
+            'slug' => 'hidden-sale',
+            'price' => 99,
+            'sale_price' => 49,
+        ]);
+
+        Banner::factory()->create([
+            'title' => 'Beauty Essentials For You',
+            'position' => BannerPosition::HomeDeals,
+            'is_active' => true,
+            'web_image_path' => 'assets/website/banners/promo_home.png',
+        ]);
+
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('deals', 5)
+                ->where('deals', fn ($deals): bool => collect($deals)
+                    ->every(fn (array $deal): bool => $deal['discountPercent'] > 0))
+                ->where('dealsBanner.title', 'Beauty Essentials For You')
+                ->has('benefits', 4)
+            );
+    }
+
+    public function test_home_page_hides_the_deals_banner_when_none_is_active(): void
+    {
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('deals', 0)
+                ->where('dealsBanner', null)
+            );
+    }
+
+    public function test_category_menu_counts_only_launched_products_per_sub_category(): void
+    {
+        $main = Category::factory()->create([
+            'name' => 'Women Fashion',
+            'slug' => 'women-fashion',
+        ]);
+        $dresses = Category::factory()->childOf($main)->create(['name' => 'Dresses', 'slug' => 'dresses', 'sort_order' => 1]);
+        Category::factory()->childOf($main)->create(['name' => 'Tops', 'slug' => 'tops', 'sort_order' => 2]);
+
+        Product::factory()->count(2)->create([
+            'category_id' => $main->id,
+            'subcategory_id' => $dresses->id,
+        ]);
+        Product::factory()->unlaunched()->create([
+            'category_id' => $main->id,
+            'subcategory_id' => $dresses->id,
+        ]);
+
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('categoryMenu', 1)
+                ->where('categoryMenu.0.name', 'Women Fashion')
+                ->where('categoryMenu.0.href', '/products?category=women-fashion')
+                ->missing('categoryMenu.0.featured')
+                ->missing('categoryMenu.0.description')
+                ->where('categoryMenu.0.children.0.slug', 'dresses')
+                ->where('categoryMenu.0.children.0.itemCount', 2)
+                ->where('categoryMenu.0.children.1.slug', 'tops')
+                ->where('categoryMenu.0.children.1.itemCount', 0)
+            );
+    }
+
     public function test_offer_zone_page_lists_sale_products(): void
     {
         $category = Category::factory()->create();

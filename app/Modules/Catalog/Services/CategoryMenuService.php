@@ -30,65 +30,28 @@ class CategoryMenuService
      */
     private function fallbackMenu(): array
     {
+        $children = [
+            ['name' => 'Bags & Accessories', 'slug' => 'bags', 'image' => 'bags_and_accessories.png'],
+            ['name' => 'Footwear', 'slug' => 'footwear', 'image' => 'footwear.png'],
+            ['name' => 'Western Wear', 'slug' => 'western-wear', 'image' => 'western_wear.png'],
+            ['name' => 'Kids Wear', 'slug' => 'kids-wear', 'image' => 'kids_wear.png'],
+            ['name' => 'Home Decor', 'slug' => 'home-decor', 'image' => 'home_decor.png'],
+            ['name' => 'Beauty', 'slug' => 'beauty', 'image' => 'beauty.png'],
+        ];
+
         return [
             [
                 'id' => 'popular',
                 'name' => 'Popular',
-                'tone' => 'popular',
-                'featuredTitle' => 'Featured picks',
-                'featured' => [
-                    [
-                        'name' => 'Western Wear',
-                        'slug' => 'western-wear',
-                        'tone' => 'western',
-                        'image' => $this->image('western_wear.png'),
-                    ],
-                    [
-                        'name' => 'Beauty',
-                        'slug' => 'beauty',
-                        'tone' => 'beauty',
-                        'image' => $this->image('beauty.png'),
-                    ],
-                ],
-                'sectionTitle' => 'All Popular',
-                'children' => [
-                    [
-                        'name' => 'Bags & Accessories',
-                        'slug' => 'bags',
-                        'tone' => 'bags',
-                        'image' => $this->image('bags_and_accessories.png'),
-                    ],
-                    [
-                        'name' => 'Footwear',
-                        'slug' => 'footwear',
-                        'tone' => 'footwear',
-                        'image' => $this->image('footwear.png'),
-                    ],
-                    [
-                        'name' => 'Western Wear',
-                        'slug' => 'western-wear',
-                        'tone' => 'western',
-                        'image' => $this->image('western_wear.png'),
-                    ],
-                    [
-                        'name' => 'Kids Wear',
-                        'slug' => 'kids-wear',
-                        'tone' => 'kids',
-                        'image' => $this->image('kids_wear.png'),
-                    ],
-                    [
-                        'name' => 'Home Decor',
-                        'slug' => 'home-decor',
-                        'tone' => 'home',
-                        'image' => $this->image('home_decor.png'),
-                    ],
-                    [
-                        'name' => 'Beauty',
-                        'slug' => 'beauty',
-                        'tone' => 'beauty',
-                        'image' => $this->image('beauty.png'),
-                    ],
-                ],
+                'image' => null,
+                'href' => '/products',
+                'children' => array_map(fn (array $child): array => [
+                    'name' => $child['name'],
+                    'slug' => $child['slug'],
+                    'image' => $this->image($child['image']),
+                    'href' => '/products?category='.$child['slug'],
+                    'itemCount' => 0,
+                ], $children),
             ],
         ];
     }

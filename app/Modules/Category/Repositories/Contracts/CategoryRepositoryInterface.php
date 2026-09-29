@@ -25,6 +25,11 @@ interface CategoryRepositoryInterface
     public function find(int $id): ?Category;
 
     /**
+     * Active category with its parent and active children loaded.
+     */
+    public function findActiveBySlug(string $slug): ?Category;
+
+    /**
      * @param  array<string, mixed>  $data
      */
     public function create(array $data): Category;

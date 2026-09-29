@@ -8,6 +8,8 @@ enum BannerPosition: string
     case Middle = 'middle';
     case Footer = 'footer';
     case OfferZone = 'offer_zone';
+    case ProductListing = 'product_listing';
+    case HomeDeals = 'home_deals';
 
     public function label(): string
     {
@@ -16,6 +18,8 @@ enum BannerPosition: string
             self::Middle => 'Middle banner',
             self::Footer => 'Footer banner',
             self::OfferZone => 'Offer Zone banner',
+            self::ProductListing => 'Product listing banner',
+            self::HomeDeals => 'Home flash deals banner',
         };
     }
 

@@ -18,6 +18,8 @@ class Product extends Model
 
     public const LowStockThreshold = 10;
 
+    public const NewArrivalDays = 30;
+
     protected $fillable = [
         'category_id',
         'subcategory_id',
@@ -221,9 +223,10 @@ class Product extends Model
         }
 
         $badge = null;
+        $discountPercent = null;
         if ($compareAt !== null && $compareAt > $effective) {
-            $off = (int) round((1 - ($effective / $compareAt)) * 100);
-            $badge = $off.'% off';
+            $discountPercent = (int) round((1 - ($effective / $compareAt)) * 100);
+            $badge = $discountPercent.'% off';
         }
 
         $specs = array_values(array_filter([
@@ -255,7 +258,11 @@ class Product extends Model
             'compareAtPrice' => $compareAt !== null && $compareAt > $effective
                 ? $this->formatMoney($compareAt)
                 : null,
+            'compareAtValue' => $compareAt !== null && $compareAt > $effective ? $compareAt : null,
             'badge' => $badge,
+            'discountPercent' => $discountPercent,
+            'isNew' => $this->created_at !== null
+                && $this->created_at->greaterThanOrEqualTo(now()->subDays(self::NewArrivalDays)),
             'stock' => $stock,
             'inStock' => $stock > 0,
             'lowStock' => $this->isLowStock($stock),

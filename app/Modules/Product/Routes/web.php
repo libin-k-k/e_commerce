@@ -6,6 +6,9 @@ use App\Modules\Product\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+Route::get('/products/suggestions', [ProductController::class, 'suggestions'])
+    ->middleware('throttle:60,1')
+    ->name('products.suggestions');
 Route::get('/products/{product}', [ProductController::class, 'show'])
     ->where('product', '^[a-z0-9]+(?:-[a-z0-9]+)*$')
     ->name('products.show');

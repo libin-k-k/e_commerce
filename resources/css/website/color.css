@@ -1,21 +1,94 @@
 :root {
-  --color-primary: #4f46e5;
-  --color-primary-dark: #3730a3;
-  --color-accent: #f97316;
-  --color-bg: #ffffff;
+  /* Brand */
+  --color-primary: #ff3b6e;
+  --color-primary-dark: #e81e54;
+  --color-primary-light: #ffe4ec;
+  --color-primary-ultra-light: #fff1f6;
+  --color-primary-rgb: 255 59 110;
+  --color-primary-ultra-light-rgb: 255 241 246;
+
+  /* Accents */
+  --color-accent: #ff6b5e;
+  --color-accent-rgb: 255 107 94;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-purple: #8b5cf6;
+
+  /* Neutrals */
+  --color-text: #1f2937;
+  --color-text-rgb: 31 41 55;
+  --color-text-secondary: #6b7280;
+  --color-text-muted: #9ca3af;
+  --color-muted: var(--color-text-muted);
+  --color-border: #e5e7eb;
+  --color-border-strong: #d1d5db;
+  --color-bg: #f9fafb;
   --color-card: #ffffff;
-  --color-text: #0f172a;
-  --color-text-secondary: #64748b;
-  --color-border: #e2e8f0;
-  --color-success: #16a34a;
-  --color-error: #dc2626;
-  --color-promo-bg: #eef2ff;
-  --color-sale: #dc2626;
-  --color-offer-label: #f59e0b;
-  --color-offer-stage: #fff7ed;
-  --color-offer-hero: #1c1917;
-  --color-offer-hero-glow: #f59e0b;
-  --color-location: #2563eb;
+  --color-surface-dark: #1f2937;
+  --color-on-dark: #ffffff;
+
+  /* Semantic */
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
+  --color-info-light: #eff6ff;
+  --color-success-light: #ecfdf5;
+  --color-error-light: #fef2f2;
+
+  /* Categories */
+  --color-category-fashion: #ffe4e8;
+  --color-category-footwear: #e8f0ff;
+  --color-category-kids: #fff5da;
+  --color-category-beauty: #f3e8ff;
+  --color-category-home: #e6faed;
+  --color-category-all: #ffe4f3;
+
+  /* UI elements */
+  --color-search-bg: #f5f7fa;
+  --color-input-focus: var(--color-primary);
+  --color-button-text: #ffffff;
+  --color-icon: var(--color-text);
+  --color-icon-inactive: var(--color-text-muted);
+  --color-price: var(--color-primary);
+
+  /* Gradients */
+  --gradient-hero-1: linear-gradient(135deg, var(--color-category-fashion) 0%, var(--color-primary-ultra-light) 100%);
+  --gradient-hero-2: linear-gradient(135deg, var(--color-category-kids) 0%, var(--color-category-fashion) 100%);
+  --gradient-hero-3: linear-gradient(135deg, var(--color-category-footwear) 0%, var(--color-category-beauty) 100%);
+
+  /* Buttons */
+  --color-btn-primary-bg: var(--color-primary);
+  --color-btn-primary-text: var(--color-button-text);
+  --color-btn-secondary-bg: var(--color-primary-light);
+  --color-btn-secondary-border: var(--color-primary);
+  --color-btn-secondary-text: var(--color-primary-dark);
+  --color-btn-outline-bg: var(--color-card);
+  --color-btn-outline-border: var(--color-primary);
+  --color-btn-outline-text: var(--color-primary);
+
+  /* Status / badges */
+  --color-badge-stock-bg: var(--color-success-light);
+  --color-badge-stock-text: var(--color-success);
+  --color-badge-sale-bg: var(--color-primary);
+  --color-badge-sale-text: var(--color-button-text);
+  --color-badge-bestseller-bg: var(--color-category-kids);
+  --color-badge-bestseller-text: var(--color-warning);
+  --color-badge-new-bg: var(--color-category-home);
+  --color-badge-new-text: var(--color-success);
+  --color-badge-discount-bg: var(--color-category-fashion);
+  --color-badge-discount-text: var(--color-primary-dark);
+  --color-badge-transit-bg: var(--color-info-light);
+  --color-badge-transit-text: var(--color-info);
+  --color-badge-error-bg: var(--color-error-light);
+  --color-badge-error-text: var(--color-error);
+
+  /* Legacy aliases used across components */
+  --color-promo-bg: var(--color-primary-ultra-light);
+  --color-sale: var(--color-badge-sale-bg);
+  --color-offer-label: var(--color-warning);
+  --color-offer-stage: var(--color-primary-ultra-light);
+  --color-offer-hero: var(--color-surface-dark);
+  --color-offer-hero-glow: var(--color-primary);
+  --color-location: var(--color-primary);
 
   --radius-sm: 8px;
   --radius-md: 12px;

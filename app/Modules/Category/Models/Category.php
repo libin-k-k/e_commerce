@@ -3,6 +3,7 @@
 namespace App\Modules\Category\Models;
 
 use App\Core\Media\PublicUrl;
+use App\Modules\Product\Models\Product;
 use Database\Factories\CategoryFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -51,6 +52,11 @@ class Category extends Model
         return $this->hasMany(self::class, 'parent_id')
             ->orderBy('sort_order')
             ->orderBy('name');
+    }
+
+    public function subcategoryProducts(): HasMany
+    {
+        return $this->hasMany(Product::class, 'subcategory_id');
     }
 
     public function isMain(): bool

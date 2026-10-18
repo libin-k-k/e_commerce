@@ -5778,16 +5778,47 @@ body.admin-nav-locked {
 
 .admin-category-row {
   display: grid;
-  grid-template-columns: 48px minmax(0, 1fr);
+  grid-template-columns: 32px 48px minmax(0, 1fr);
   gap: 10px;
   align-items: center;
   padding: 12px;
 }
 
 .admin-category-row.is-child {
+  grid-template-columns: 48px minmax(0, 1fr);
   border-top: 1px solid var(--color-border);
   background: var(--color-bg);
   padding-left: 28px;
+}
+
+.admin-category-row__toggle {
+  width: 32px;
+  height: 32px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
+.admin-category-row__toggle:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.admin-category-row__toggle-icon {
+  display: block;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid currentColor;
+}
+
+.admin-category-group.is-open .admin-category-row__toggle-icon {
+  transform: rotate(180deg);
 }
 
 .admin-category-row__thumb {
@@ -5829,6 +5860,11 @@ body.admin-nav-locked {
   list-style: none;
   margin: 0;
   padding: 0;
+  display: none;
+}
+
+.admin-category-group.is-open .admin-category-subs {
+  display: block;
 }
 
 
@@ -5837,7 +5873,7 @@ body.admin-nav-locked {
 
 
 .product-form {
-  max-width: 920px;
+  max-width: 100%;
   display: grid;
   gap: 16px;
   padding: 16px;

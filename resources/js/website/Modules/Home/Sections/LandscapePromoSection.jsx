@@ -17,9 +17,11 @@ export default function LandscapePromoSection({ banners = [], label = 'Promotion
                         className={`landscape-card is-${banner.style ?? 'cinematic'}`}
                     >
                         <img
-                            className="landscape-card__image"
+                            className={`landscape-card__image${banner.displayWidth || banner.displayHeight ? ' has-custom-size' : ''}`}
                             src={banner.web_image || banner.image}
                             alt=""
+                            width={banner.displayWidth || undefined}
+                            height={banner.displayHeight || undefined}
                             loading="lazy"
                         />
                         <div className="landscape-card__content">

@@ -3,7 +3,7 @@ import { createInertiaApp } from '@inertiajs/react';
 import { createRoot } from 'react-dom/client';
 import { resolvePageComponent } from './resolvePage';
 
-const appName = import.meta.env.VITE_APP_NAME || 'OneCart';
+const appName = import.meta.env.VITE_APP_NAME || 'Nokipo';
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),

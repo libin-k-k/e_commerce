@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Modules\Cart\Models\CartItem;
 use App\Modules\Product\Models\Product;
 use App\Modules\Product\Models\ProductVariant;
+use App\Modules\Product\Services\ProductQuantityPricing;
 use App\Modules\Wishlist\Services\WishlistService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -21,6 +22,7 @@ class CartService
     public function __construct(
         private readonly GuestDevice $guestDevice,
         private readonly WishlistService $wishlist,
+        private readonly ProductQuantityPricing $quantityPricing,
     ) {}
 
     public function count(Request $request): int
@@ -60,7 +62,14 @@ class CartService
     public function items(Request $request): Collection
     {
         return $this->ownerQuery($request)
-            ->with(['product.images', 'product.category', 'product.subcategory', 'variant.size', 'variant.color'])
+            ->with([
+                'product.images',
+                'product.category',
+                'product.subcategory',
+                'product.quantityDiscounts',
+                'variant.size',
+                'variant.color',
+            ])
             ->orderByDesc('id')
             ->get()
             ->map(fn (CartItem $item): array => $this->toArray($item))
@@ -241,9 +250,20 @@ class CartService
     {
         $product = $item->product;
         $variant = $item->variant;
-        $unit = $variant?->effectivePrice() ?? $product?->effectivePrice() ?? 0.0;
-        $mrp = max($unit, (float) ($variant?->price ?? $product?->price ?? 0));
-        $line = $unit * $item->quantity;
+        $baseUnit = $variant?->effectivePrice() ?? $product?->effectivePrice() ?? 0.0;
+        $mrp = max($baseUnit, (float) ($variant?->price ?? $product?->price ?? 0));
+        $priced = $product !== null
+            ? $this->quantityPricing->priceLine($product, $baseUnit, (int) $item->quantity)
+            : [
+                'unit_price' => $baseUnit,
+                'line_total' => round($baseUnit * $item->quantity, 2),
+                'base_line_total' => round($baseUnit * $item->quantity, 2),
+                'quantity_discount' => null,
+                'savings' => 0.0,
+            ];
+        $unit = $priced['unit_price'];
+        $line = $priced['line_total'];
+        $lineMrp = $mrp * $item->quantity;
         $stock = $variant !== null ? (int) $variant->stock : ($product?->availableStock() ?? 0);
 
         return [
@@ -262,8 +282,10 @@ class CartService
             'unit_mrp' => $mrp,
             'line_total' => $line,
             'line_total_label' => '₹'.number_format($line, 2),
-            'line_mrp' => $mrp * $item->quantity,
-            'discount_percent' => $mrp > $unit ? (int) round((1 - $unit / $mrp) * 100) : 0,
+            'line_mrp' => $lineMrp,
+            'discount_percent' => $lineMrp > $line ? (int) round((1 - $line / $lineMrp) * 100) : 0,
+            'quantity_discount' => $priced['quantity_discount'],
+            'quantity_savings' => $priced['savings'],
             'max_quantity' => min(self::MaxQuantity, max($stock, $item->quantity)),
             'in_stock' => $stock > 0,
         ];

@@ -73,7 +73,7 @@ class BannerSeeder extends Seeder
                 'sort_order' => 1,
             ],
             [
-                'title' => 'OneCart',
+                'title' => 'Nokipo',
                 'subtitle' => 'Deals worth opening - every product with an active discount, in one place.',
                 'position' => BannerPosition::OfferZone,
                 'style' => BannerStyle::DarkSplit,

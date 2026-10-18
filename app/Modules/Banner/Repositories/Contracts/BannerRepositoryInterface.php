@@ -28,7 +28,17 @@ interface BannerRepositoryInterface
     public function delete(Banner $banner): void;
 
     /**
+     * @param  list<int>  $ids
+     */
+    public function reorder(array $ids): void;
+
+    /**
      * @return Collection<int, Banner>
      */
     public function activeByPosition(BannerPosition $position): Collection;
+
+    /**
+     * @return Collection<int, Banner>
+     */
+    public function byPosition(BannerPosition $position): Collection;
 }

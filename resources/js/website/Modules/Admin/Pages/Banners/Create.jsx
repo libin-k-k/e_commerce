@@ -8,6 +8,7 @@ export default function Create({ seo, options }) {
             <Head title={seo?.title} />
             <BannerForm
                 options={options}
+                initialPosition={options.initialPosition}
                 submitUrl="/admin/banners"
                 method="post"
                 submitLabel="Create Banner"

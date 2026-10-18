@@ -1,6 +1,7 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import BrandLogo from './BrandLogo';
 import {
     CloseIcon,
     DiscoverSections,
@@ -108,13 +109,7 @@ export default function Header({ current = 'home', onOpenCategories, onOpenCart,
                 </button>
 
                 <Link href="/" className="site-header__brand" aria-label={`${appName} home`}>
-                    <span className="site-header__logo" aria-hidden="true">
-                        <LogoIcon />
-                    </span>
-                    <span className="site-header__brand-copy">
-                        <span className="site-header__brand-name">{appName}</span>
-                        <span className="site-header__tagline">Shop More, Live Better</span>
-                    </span>
+                    <BrandLogo className="site-header__logo-img" />
                 </Link>
 
                 <nav className="site-header__nav" aria-label="Primary">
@@ -272,20 +267,6 @@ export default function Header({ current = 'home', onOpenCategories, onOpenCart,
                 </div>
             </div>
         </header>
-    );
-}
-
-function LogoIcon() {
-    return (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M5 8h14l-1 12.5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 20.5L5 8z" fill="currentColor" />
-            <path
-                d="M9 10V6.5a3 3 0 0 1 6 0V10"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-            />
-        </svg>
     );
 }
 

@@ -4,6 +4,7 @@ namespace App\Modules\Home\Services;
 
 use App\Core\Media\PublicUrl;
 use App\Modules\Banner\Services\BannerStorefrontService;
+use App\Modules\Offer\Services\OfferStorefrontService;
 use App\Modules\Product\Services\ProductService;
 
 class HomePageService
@@ -13,6 +14,7 @@ class HomePageService
     public function __construct(
         private readonly ProductService $productService,
         private readonly BannerStorefrontService $bannerStorefrontService,
+        private readonly OfferStorefrontService $offerStorefrontService,
     ) {}
 
     /**
@@ -21,6 +23,7 @@ class HomePageService
     public function content(): array
     {
         $banners = $this->bannerStorefrontService->forHome();
+        $categoryShowcases = $this->productService->featuredByCategory();
 
         return [
             'quickCategories' => [
@@ -120,7 +123,9 @@ class HomePageService
                     'image' => $this->categoryImage('beauty.png'),
                 ],
             ],
-            'products' => $this->productService->featured(4),
+            'categoryShowcases' => $categoryShowcases,
+            'dealCards' => $this->offerStorefrontService->cardsFromCategories($categoryShowcases),
+            'offerPage' => $this->offerStorefrontService->presentation(),
             'deals' => array_slice($this->productService->onSale(), 0, self::DealsLimit),
             'dealsBanner' => $banners['dealsBanner'],
             'heroBanners' => $banners['heroBanners'],

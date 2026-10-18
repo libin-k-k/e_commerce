@@ -4,6 +4,7 @@ namespace App\Modules\Banner\Services;
 
 use App\Modules\Banner\Enums\BannerPosition;
 use App\Modules\Banner\Models\Banner;
+use App\Modules\Banner\Models\BannerSection;
 use App\Modules\Banner\Repositories\Contracts\BannerRepositoryInterface;
 
 class BannerStorefrontService
@@ -35,11 +36,7 @@ class BannerStorefrontService
      */
     public function forOfferZone(): array
     {
-        return $this->banners
-            ->activeByPosition(BannerPosition::OfferZone)
-            ->map(fn (Banner $banner): array => $banner->toStorefrontArray())
-            ->values()
-            ->all();
+        return $this->forPosition(BannerPosition::OfferZone);
     }
 
     /**
@@ -55,9 +52,22 @@ class BannerStorefrontService
      */
     public function forPosition(BannerPosition $position): array
     {
+        $section = BannerSection::query()->where('position', $position->value)->first();
+
+        if ($section !== null && ! $section->is_enabled) {
+            return [];
+        }
+
+        $showCount = (bool) ($section?->show_count ?? false);
+
         return $this->banners
             ->activeByPosition($position)
-            ->map(fn (Banner $banner): array => $banner->toStorefrontArray())
+            ->map(function (Banner $banner) use ($showCount): array {
+                return [
+                    ...$banner->toStorefrontArray(),
+                    'showCount' => $showCount,
+                ];
+            })
             ->filter(fn (array $banner): bool => filled($banner['web_image']) || filled($banner['mobile_image']))
             ->values()
             ->all();

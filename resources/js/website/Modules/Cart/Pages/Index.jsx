@@ -1,11 +1,13 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import ProductCard from '../../../Shared/Components/ProductCard';
 import StorefrontLayout from '../../../Shared/Layouts/StorefrontLayout';
 import CartHeader from '../Components/CartHeader';
 import { ArrowIcon, BagIcon, CheckIcon, HeartIcon, TrashIcon } from '../Components/CartIcons';
 import CartLine from '../Components/CartLine';
 import CartSummary, { CheckoutButton } from '../Components/CartSummary';
+import CouponFireworks from '../Components/CouponFireworks';
+import CouponOffersModal from '../Components/CouponOffersModal';
 import DeliveryProgress from '../Components/DeliveryProgress';
 import { formatMoney } from '../../Product/Sections/ProductInfoSection';
 
@@ -16,8 +18,23 @@ const itemsLabel = (count) => `${count} ${count === 1 ? 'item' : 'items'}`;
 export default function Index({ seo, delivery, recommendations = [] }) {
     const { cart, cartCount = 0, wishlistProductIds = [], flash } = usePage().props;
     const items = cart?.items ?? [];
+    const coupon = cart?.coupon ?? null;
+    const availableCoupons = cart?.availableCoupons ?? [];
     const [deselected, setDeselected] = useState(() => new Set());
     const [pending, setPending] = useState(false);
+    const [couponModalOpen, setCouponModalOpen] = useState(false);
+    const [fireworksActive, setFireworksActive] = useState(false);
+
+    useEffect(() => {
+        if (!flash?.coupon_celebration) {
+            return undefined;
+        }
+
+        setFireworksActive(true);
+        const timer = window.setTimeout(() => setFireworksActive(false), 2800);
+
+        return () => window.clearTimeout(timer);
+    }, [flash?.coupon_celebration]);
 
     const selectedItems = items.filter((item) => !deselected.has(item.id));
     const selectedIds = selectedItems.map((item) => item.id);
@@ -27,18 +44,23 @@ export default function Index({ seo, delivery, recommendations = [] }) {
         const units = selectedItems.reduce((total, item) => total + item.quantity, 0);
         const mrp = roundMoney(selectedItems.reduce((total, item) => total + item.line_mrp, 0));
         const subtotal = roundMoney(selectedItems.reduce((total, item) => total + item.line_total, 0));
-        const deliveryFee = subtotal === 0 || subtotal >= delivery.freeAbove ? 0 : delivery.fee;
+        const couponDiscount = coupon ? Math.min(subtotal, Number(coupon.discount || 0)) : 0;
+        const payableSubtotal = roundMoney(Math.max(0, subtotal - couponDiscount));
+        const deliveryFee = payableSubtotal === 0 || payableSubtotal >= delivery.freeAbove ? 0 : delivery.fee;
+        const itemDiscount = roundMoney(mrp - subtotal);
 
         return {
             units,
             mrp,
             subtotal,
-            discount: roundMoney(mrp - subtotal),
+            itemDiscount,
+            couponDiscount: roundMoney(couponDiscount),
+            discount: roundMoney(itemDiscount + couponDiscount),
             deliveryFee,
-            total: roundMoney(subtotal + deliveryFee),
-            remaining: roundMoney(Math.max(0, delivery.freeAbove - subtotal)),
+            total: roundMoney(payableSubtotal + deliveryFee),
+            remaining: roundMoney(Math.max(0, delivery.freeAbove - payableSubtotal)),
         };
-    }, [selectedItems, delivery]);
+    }, [selectedItems, delivery, coupon]);
 
     const visitOptions = {
         preserveScroll: true,
@@ -174,7 +196,13 @@ export default function Index({ seo, delivery, recommendations = [] }) {
                             </div>
                         </section>
 
-                        <CartSummary summary={summary} freeAbove={delivery.freeAbove} />
+                        <CartSummary
+                            summary={summary}
+                            freeAbove={delivery.freeAbove}
+                            coupon={coupon}
+                            availableCoupons={availableCoupons}
+                            onViewAllCoupons={() => setCouponModalOpen(true)}
+                        />
                     </div>
                 ) : (
                     <div className="cart-empty">
@@ -224,6 +252,15 @@ export default function Index({ seo, delivery, recommendations = [] }) {
                     <CheckoutButton className="cart-checkout-bar__btn" disabled={selectedIds.length === 0} />
                 </div>
             ) : null}
+
+            <CouponOffersModal
+                open={couponModalOpen}
+                coupons={availableCoupons}
+                appliedCode={coupon?.code ?? null}
+                onClose={() => setCouponModalOpen(false)}
+                onApplied={() => setFireworksActive(true)}
+            />
+            <CouponFireworks active={fireworksActive} />
         </StorefrontLayout>
     );
 }

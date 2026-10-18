@@ -6,6 +6,7 @@ use App\Core\Seo\SeoJsonLoader;
 use App\Http\Controllers\Controller;
 use App\Modules\Banner\Services\BannerStorefrontService;
 use App\Modules\Home\Services\HomePageService;
+use App\Modules\Offer\Services\OfferStorefrontService;
 use App\Modules\Product\Services\ProductService;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -16,6 +17,7 @@ class HomeController extends Controller
         private readonly HomePageService $homePageService,
         private readonly ProductService $productService,
         private readonly BannerStorefrontService $bannerStorefrontService,
+        private readonly OfferStorefrontService $offerStorefrontService,
         private readonly SeoJsonLoader $seoJsonLoader,
     ) {}
 
@@ -32,12 +34,32 @@ class HomeController extends Controller
 
     public function offers(): Response
     {
-        $products = $this->productService->onSale();
+        $page = $this->offerStorefrontService->hasCampaigns()
+            ? $this->offerStorefrontService->page()
+            : [
+                'products' => $this->productService->onSale(),
+                'schedule' => [
+                    'countdownEnabled' => false,
+                    'endsAt' => null,
+                    'startsAt' => null,
+                ],
+            ];
+        $presentation = $this->offerStorefrontService->presentation();
+        $schedule = $presentation['countdownEnabled']
+            ? [
+                'countdownEnabled' => true,
+                'endsAt' => $presentation['endsAt'],
+                'startsAt' => null,
+            ]
+            : $page['schedule'];
+        $products = $page['products'];
         $banners = $this->bannerStorefrontService->forOfferZone();
 
         return Inertia::render('Home/Pages/OfferZone', [
             'seo' => $this->seoJsonLoader->load('Modules/Home/offers'),
             'products' => $products,
+            'schedule' => $schedule,
+            'offerPage' => $presentation,
             'banners' => $banners,
             'stats' => [
                 'count' => count($products),

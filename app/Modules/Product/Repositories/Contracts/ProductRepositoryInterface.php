@@ -61,6 +61,13 @@ interface ProductRepositoryInterface
     public function featured(int $limit = 4): array;
 
     /**
+     * The first active main categories that have launched products, each with a short product list.
+     *
+     * @return list<array{name: string, slug: string, href: string, products: list<array<string, mixed>>}>
+     */
+    public function featuredByCategory(int $categoryLimit = 3, int $perCategory = 4): array;
+
+    /**
      * Products currently on sale (base or variant sale price).
      *
      * @return list<array<string, mixed>>

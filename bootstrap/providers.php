@@ -5,8 +5,10 @@ use App\Modules\Admin\Providers\AdminServiceProvider;
 use App\Modules\Banner\Providers\BannerServiceProvider;
 use App\Modules\Cart\Providers\CartServiceProvider;
 use App\Modules\Category\Providers\CategoryServiceProvider;
+use App\Modules\Coupon\Providers\CouponServiceProvider;
 use App\Modules\Help\Providers\HelpServiceProvider;
 use App\Modules\Home\Providers\HomeServiceProvider;
+use App\Modules\Offer\Providers\OfferServiceProvider;
 use App\Modules\Product\Providers\ProductServiceProvider;
 use App\Modules\Wishlist\Providers\WishlistServiceProvider;
 use App\Providers\AppServiceProvider;
@@ -21,5 +23,7 @@ return [
     BannerServiceProvider::class,
     CategoryServiceProvider::class,
     CartServiceProvider::class,
+    CouponServiceProvider::class,
+    OfferServiceProvider::class,
     WishlistServiceProvider::class,
 ];

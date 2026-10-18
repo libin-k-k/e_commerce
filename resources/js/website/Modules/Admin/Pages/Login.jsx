@@ -1,7 +1,7 @@
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
+import BrandLogo from '../../../Shared/Components/BrandLogo';
 
 export default function Login({ seo }) {
-    const { appName } = usePage().props;
     const { data, setData, post, processing, errors } = useForm({
         email: '',
         password: '',
@@ -17,7 +17,7 @@ export default function Login({ seo }) {
         <div className="admin-login">
             <Head title={seo?.title} />
             <div className="admin-login__card">
-                <p className="admin-login__brand">{appName}</p>
+                <BrandLogo className="admin-login__logo" />
                 <h1 className="admin-login__title">Admin sign in</h1>
                 <p className="admin-login__text">Use your admin credentials to open the dashboard.</p>
 

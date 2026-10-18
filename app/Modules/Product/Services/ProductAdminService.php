@@ -5,6 +5,7 @@ namespace App\Modules\Product\Services;
 use App\Modules\Banner\Services\WebpImageConverter;
 use App\Modules\Category\Models\Category;
 use App\Modules\Category\Repositories\Contracts\CategoryRepositoryInterface;
+use App\Modules\Product\Enums\QuantityDiscountType;
 use App\Modules\Product\Models\Product;
 use App\Modules\Product\Models\ProductColor;
 use App\Modules\Product\Models\ProductSize;
@@ -61,6 +62,7 @@ class ProductAdminService
 
             $product = $this->products->create($payload);
             $this->syncOptionsAndVariants($product, $data, $payload);
+            $this->syncQuantityDiscounts($product, $data);
             $this->storeAdditionalImages($product, $additionalImages ?? []);
 
             return $this->findOrFail($product->id);
@@ -90,6 +92,7 @@ class ProductAdminService
             $this->products->update($product, $payload);
             $this->removeImages($product, $removeImageIds ?? []);
             $this->syncOptionsAndVariants($product->fresh(), $data, $payload);
+            $this->syncQuantityDiscounts($product->fresh(), $data);
             $this->storeAdditionalImages($product->fresh(), $additionalImages ?? []);
 
             return $this->findOrFail($product->id);
@@ -158,10 +161,13 @@ class ProductAdminService
 
         $categoryId = (int) ($data['category_id'] ?? 0);
         $subcategoryId = $data['subcategory_id'] ?? null;
-        if ($subcategoryId === '' || $subcategoryId === 'null') {
+        if ($subcategoryId === '' || $subcategoryId === 'null' || $subcategoryId === null) {
             $subcategoryId = null;
         } else {
             $subcategoryId = (int) $subcategoryId;
+            if ($subcategoryId === 0) {
+                $subcategoryId = null;
+            }
         }
 
         $category = Category::query()->find($categoryId);
@@ -318,6 +324,82 @@ class ProductAdminService
         }
 
         $product->update(['stock' => $totalStock]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function syncQuantityDiscounts(Product $product, array $data): void
+    {
+        $product->quantityDiscounts()->delete();
+
+        $rows = $this->normalizeQuantityDiscountRows($data['quantity_discounts'] ?? []);
+        foreach ($rows as $index => $row) {
+            $product->quantityDiscounts()->create([
+                'min_quantity' => $row['min_quantity'],
+                'type' => $row['type'],
+                'value' => $row['value'],
+                'sort_order' => $index,
+            ]);
+        }
+    }
+
+    /**
+     * @return list<array{min_quantity: int, type: QuantityDiscountType, value: float}>
+     */
+    private function normalizeQuantityDiscountRows(mixed $value): array
+    {
+        $items = $this->decodeList($value);
+        $rows = [];
+        $seenQty = [];
+
+        foreach ($items as $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+
+            $minQuantity = (int) ($item['min_quantity'] ?? 0);
+            if ($minQuantity < 2) {
+                continue;
+            }
+
+            $type = QuantityDiscountType::tryFrom((string) ($item['type'] ?? ''));
+            if ($type === null) {
+                throw ValidationException::withMessages([
+                    'quantity_discounts' => 'Each quantity offer needs a valid type (bundle, percent, or fixed).',
+                ]);
+            }
+
+            $amount = (float) ($item['value'] ?? 0);
+            if ($amount <= 0) {
+                throw ValidationException::withMessages([
+                    'quantity_discounts' => 'Each quantity offer needs a value greater than 0.',
+                ]);
+            }
+
+            if ($type === QuantityDiscountType::Percent && $amount > 100) {
+                throw ValidationException::withMessages([
+                    'quantity_discounts' => 'Percent offers cannot be more than 100.',
+                ]);
+            }
+
+            if (isset($seenQty[$minQuantity])) {
+                throw ValidationException::withMessages([
+                    'quantity_discounts' => 'Duplicate min quantity in quantity offers: '.$minQuantity,
+                ]);
+            }
+
+            $seenQty[$minQuantity] = true;
+            $rows[] = [
+                'min_quantity' => $minQuantity,
+                'type' => $type,
+                'value' => round($amount, 2),
+            ];
+        }
+
+        usort($rows, fn (array $a, array $b): int => $a['min_quantity'] <=> $b['min_quantity']);
+
+        return $rows;
     }
 
     /**

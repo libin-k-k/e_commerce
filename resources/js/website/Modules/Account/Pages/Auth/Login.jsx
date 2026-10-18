@@ -1,8 +1,9 @@
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
+import BrandLogo from '../../../../Shared/Components/BrandLogo';
+import GoogleAuthButton from '../../../../Shared/Components/GoogleAuthButton';
 import StorefrontLayout from '../../../../Shared/Layouts/StorefrontLayout';
 
 export default function Login({ seo }) {
-    const { appName } = usePage().props;
     const { data, setData, post, processing, errors } = useForm({
         login: '',
         password: '',
@@ -19,11 +20,15 @@ export default function Login({ seo }) {
             <Head title={seo?.title} />
             <section className="auth-page">
                 <div className="auth-page__card">
-                    <p className="auth-page__brand">{appName}</p>
+                    <BrandLogo className="auth-page__logo" />
                     <h1 className="auth-page__title">Sign in</h1>
                     <p className="auth-page__text">
                         Use your email or mobile number. Guest cart and wishlist sync after login.
                     </p>
+                    <GoogleAuthButton label="Continue with Google" />
+                    <div className="auth-divider" role="separator" aria-label="or">
+                        <span>or</span>
+                    </div>
                     <form className="auth-page__form" onSubmit={onSubmit}>
                         <label className="auth-page__label" htmlFor="login-identifier">
                             Email or mobile

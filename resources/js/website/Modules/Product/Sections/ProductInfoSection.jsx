@@ -85,6 +85,19 @@ export default function ProductInfoSection({
                 ) : null}
             </div>
 
+            {(product.quantityDiscounts ?? []).length > 0 ? (
+                <div className="pdp-qty-offers" aria-label="Quantity offers">
+                    <p className="pdp-options__label">Multi-buy offers</p>
+                    <ul className="pdp-qty-offers__list">
+                        {product.quantityDiscounts.map((offer) => (
+                            <li key={`${offer.type}-${offer.minQuantity}-${offer.value}`}>
+                                {offer.label}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            ) : null}
+
             {colorOptions.length > 0 ? (
                 <div className="pdp-options">
                     <p className="pdp-options__label">

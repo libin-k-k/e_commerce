@@ -143,6 +143,14 @@ class ProductSeeder extends Seeder
                 ],
                 'sort_order' => 4,
             ],
+            $this->simpleProduct('Soft cotton tee', 'soft-cotton-tee', 'SKU-TEE-001', $western, $westernTops, 89, 59, 'assets/website/products/wireless_headphone_2.png', 5),
+            $this->simpleProduct('Weekend denim', 'weekend-denim', 'SKU-DENIM-001', $western, $westernTops, 120, 79, 'assets/website/products/wireless_headphone_3.png', 6),
+            $this->simpleProduct('Day dress', 'day-dress', 'SKU-DRESS-001', $western, $westernTops, 110, 74, 'assets/website/products/everyday_tote_bag_1.png', 7),
+            $this->simpleProduct('Linen cushion', 'linen-cushion', 'SKU-CUSH-001', $home, null, 36, 24, 'assets/website/products/minimal_desk_lamp_2.png', 8),
+            $this->simpleProduct('Wooden tray', 'wooden-tray', 'SKU-TRAY-001', $home, null, 42, 29, 'assets/website/products/minimal_desk_lamp_3.png', 9),
+            $this->simpleProduct('Compact wallet', 'compact-wallet', 'SKU-WALL-001', $bags, $handbags, 25, 18, 'assets/website/products/everyday_tote_bag_2.png', 10),
+            $this->simpleProduct('Canvas backpack', 'canvas-backpack', 'SKU-PACK-001', $bags, $handbags, 64, 48, 'assets/website/products/everyday_tote_bag_3.png', 11),
+            $this->simpleProduct('Travel pouch', 'travel-pouch', 'SKU-POUCH-001', $bags, $handbags, 22, 15, 'assets/website/products/ceramic_mug_set_2.png', 12),
         ];
 
         foreach ($products as $item) {
@@ -225,6 +233,45 @@ class ProductSeeder extends Seeder
 
             $product->update(['stock' => $totalStock]);
         }
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function simpleProduct(
+        string $name,
+        string $slug,
+        string $sku,
+        Category $category,
+        ?Category $subcategory,
+        float $price,
+        ?float $salePrice,
+        string $image,
+        int $sortOrder,
+    ): array {
+        return [
+            'name' => $name,
+            'slug' => $slug,
+            'sku' => $sku,
+            'category_id' => $category->id,
+            'subcategory_id' => $subcategory?->id,
+            'short_description' => $name.' for everyday use.',
+            'description' => '<p>'.$name.'.</p>',
+            'price' => $price,
+            'sale_price' => $salePrice,
+            'stock' => 20,
+            'rating' => 4.2,
+            'main_image_path' => $image,
+            'gallery' => [$image],
+            'sizes' => [],
+            'colors' => [
+                ['name' => 'Default', 'hex' => '#111827'],
+            ],
+            'variant_prices' => [
+                'Default' => ['price' => $price, 'sale_price' => $salePrice, 'stock' => 20],
+            ],
+            'sort_order' => $sortOrder,
+        ];
     }
 
     /**

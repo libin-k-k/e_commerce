@@ -1,11 +1,14 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
+import BrandLogo from '../../../Shared/Components/BrandLogo';
 
 const navItems = [
     { key: 'dashboard', href: '/admin/dashboard', label: 'Dashboard' },
     { key: 'banners', href: '/admin/banners', label: 'Banners' },
+    { key: 'offers', href: '/admin/offers', label: 'Offers' },
     { key: 'categories', href: '/admin/categories', label: 'Categories' },
     { key: 'products', href: '/admin/products', label: 'Products' },
+    { key: 'coupons', href: '/admin/coupons', label: 'Coupons' },
 ];
 
 export default function AdminLayout({ title, current = 'dashboard', children }) {
@@ -53,7 +56,10 @@ export default function AdminLayout({ title, current = 'dashboard', children }) 
 
             <aside className="admin-sidebar" aria-label="Admin navigation" id="admin-sidebar">
                 <div className="admin-sidebar__head">
-                    <p className="admin-sidebar__brand">{appName} Admin</p>
+                    <Link href="/admin/dashboard" className="admin-sidebar__brand" aria-label={`${appName} Admin`}>
+                        <BrandLogo className="admin-sidebar__logo" />
+                        <span className="admin-sidebar__brand-label">Admin</span>
+                    </Link>
                     <button
                         type="button"
                         className="admin-sidebar__close"

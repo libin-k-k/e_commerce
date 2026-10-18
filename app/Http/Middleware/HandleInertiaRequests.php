@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Modules\Cart\Services\CartService;
 use App\Modules\Catalog\Services\CategoryMenuService;
+use App\Modules\Coupon\Services\CouponCartService;
 use App\Modules\Wishlist\Services\WishlistService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -45,13 +46,19 @@ class HandleInertiaRequests extends Middleware
             'wishlistCount' => fn () => app(WishlistService::class)->count($request),
             'wishlistProductIds' => fn () => app(WishlistService::class)->productIds($request),
             'cart' => function () use ($request) {
-                $items = app(CartService::class)->items($request);
-                $subtotal = $items->sum('line_total');
+                $cart = app(CartService::class);
+                $coupons = app(CouponCartService::class);
+                $items = $cart->items($request);
+                $itemList = $items->all();
+                $subtotal = (float) $items->sum('line_total');
+                $coupon = $coupons->applied($request, $itemList, $subtotal);
 
                 return [
                     'items' => $items,
                     'subtotal' => $subtotal,
-                    'subtotalLabel' => '₹'.number_format((float) $subtotal, 2),
+                    'subtotalLabel' => '₹'.number_format($subtotal, 2),
+                    'coupon' => $coupon,
+                    'availableCoupons' => $coupons->availableOffers($request, $itemList, $subtotal),
                 ];
             },
             'wishlist' => fn () => [
@@ -72,6 +79,7 @@ class HandleInertiaRequests extends Middleware
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'open_sheet' => fn () => $request->session()->get('open_sheet'),
+                'coupon_celebration' => fn () => (bool) $request->session()->get('coupon_celebration'),
             ],
         ];
     }

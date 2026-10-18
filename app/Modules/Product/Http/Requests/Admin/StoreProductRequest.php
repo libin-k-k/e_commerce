@@ -35,6 +35,7 @@ class StoreProductRequest extends FormRequest
             'sizes' => ['nullable'],
             'colors' => ['nullable'],
             'variants' => ['nullable'],
+            'quantity_discounts' => ['nullable'],
             'is_unlaunched' => ['sometimes', 'boolean'],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
         ];

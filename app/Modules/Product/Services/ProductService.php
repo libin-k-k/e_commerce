@@ -37,6 +37,14 @@ class ProductService
     }
 
     /**
+     * @return list<array{name: string, slug: string, href: string, products: list<array<string, mixed>>}>
+     */
+    public function featuredByCategory(int $categoryLimit = 3, int $perCategory = 4): array
+    {
+        return $this->products->featuredByCategory($categoryLimit, $perCategory);
+    }
+
+    /**
      * @return list<array<string, mixed>>
      */
     public function onSale(): array

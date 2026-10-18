@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Modules\Account\Http\Middleware\EnsureCustomerRegistrationComplete;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -15,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
             HandleInertiaRequests::class,
+            EnsureCustomerRegistrationComplete::class,
         ]);
 
         $middleware->redirectGuestsTo(function (Request $request) {
@@ -28,6 +30,16 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectUsersTo(function (Request $request) {
             if ($request->is('admin') || $request->is('admin/*')) {
                 return route('admin.dashboard');
+            }
+
+            $user = $request->user();
+            if (
+                $user !== null
+                && ! $user->is_admin
+                && $user->google_id !== null
+                && ! $user->hasCompletedRegistration()
+            ) {
+                return route('register.google.complete');
             }
 
             return route('account.index');

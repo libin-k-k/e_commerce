@@ -252,3 +252,205 @@
 .admin-nav-backdrop {
   transition: opacity 180ms ease, visibility 180ms ease;
 }
+
+.coupon-modal.is-open .coupon-modal__backdrop {
+  animation: coupon-modal-fade 220ms ease both;
+}
+
+.coupon-modal.is-open .coupon-modal__panel {
+  animation: coupon-modal-pop 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.coupon-modal.is-open .coupon-modal__close {
+  animation: coupon-modal-fade 280ms ease 80ms both;
+}
+
+.coupon-modal.is-open .coupon-modal__gift {
+  animation: coupon-gift-bob 1.8s ease-in-out infinite;
+}
+
+.coupon-modal__scroll-hint {
+  animation: coupon-scroll-hint 1.4s ease-in-out infinite;
+}
+
+.coupon-fireworks.is-active .coupon-fireworks__burst--a {
+  animation: coupon-burst-pop 700ms ease-out both;
+}
+
+.coupon-fireworks.is-active .coupon-fireworks__burst--b {
+  animation: coupon-burst-pop 700ms ease-out 90ms both;
+}
+
+.coupon-fireworks.is-active .coupon-fireworks__burst--c {
+  animation: coupon-burst-pop 700ms ease-out 160ms both;
+}
+
+.coupon-fireworks.is-active .coupon-fireworks__spark {
+  animation: coupon-spark-fly 1100ms cubic-bezier(0.15, 0.75, 0.25, 1) both;
+}
+
+.coupon-fireworks.is-active .coupon-fireworks__spark--1 { animation-delay: 40ms; }
+.coupon-fireworks.is-active .coupon-fireworks__spark--2 { animation-delay: 70ms; }
+.coupon-fireworks.is-active .coupon-fireworks__spark--3 { animation-delay: 100ms; }
+.coupon-fireworks.is-active .coupon-fireworks__spark--4 { animation-delay: 55ms; }
+.coupon-fireworks.is-active .coupon-fireworks__spark--5 { animation-delay: 120ms; }
+.coupon-fireworks.is-active .coupon-fireworks__spark--6 { animation-delay: 85ms; }
+.coupon-fireworks.is-active .coupon-fireworks__spark--7 { animation-delay: 140ms; }
+.coupon-fireworks.is-active .coupon-fireworks__spark--8 { animation-delay: 60ms; }
+.coupon-fireworks.is-active .coupon-fireworks__spark--9 { animation-delay: 110ms; }
+.coupon-fireworks.is-active .coupon-fireworks__spark--10 { animation-delay: 95ms; }
+.coupon-fireworks.is-active .coupon-fireworks__spark--11 { animation-delay: 130ms; }
+.coupon-fireworks.is-active .coupon-fireworks__spark--12 { animation-delay: 75ms; }
+
+.coupon-fireworks.is-active .coupon-fireworks__ring--1 {
+  animation: coupon-ring-expand 900ms ease-out both;
+}
+
+.coupon-fireworks.is-active .coupon-fireworks__ring--2 {
+  animation: coupon-ring-expand 1100ms ease-out 120ms both;
+  border-color: rgb(255 107 138 / 0.7);
+}
+
+.coupon-fireworks.is-active .coupon-fireworks__toast {
+  animation: coupon-toast-in 420ms ease 180ms both, coupon-toast-out 360ms ease 2100ms forwards;
+}
+
+@keyframes coupon-modal-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes coupon-modal-pop {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.94);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes coupon-gift-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes coupon-scroll-hint {
+  0%,
+  100% {
+    transform: translateX(-50%) translateY(0);
+  }
+
+  50% {
+    transform: translateX(-50%) translateY(3px);
+  }
+}
+
+@keyframes coupon-burst-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+
+  35% {
+    opacity: 1;
+    transform: scale(1.8);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+}
+
+@keyframes coupon-spark-fly {
+  0% {
+    opacity: 0;
+    transform: rotate(var(--a, 0deg)) translateY(0) scale(0.4);
+  }
+
+  18% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: rotate(var(--a, 0deg)) translateY(var(--dist, -140px)) scale(1);
+  }
+}
+
+@keyframes coupon-ring-expand {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.4);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(7);
+  }
+}
+
+@keyframes coupon-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@keyframes coupon-toast-out {
+  to {
+    opacity: 0;
+    transform: translate(-50%, -8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coupon-modal.is-open .coupon-modal__backdrop,
+  .coupon-modal.is-open .coupon-modal__panel,
+  .coupon-modal.is-open .coupon-modal__close,
+  .coupon-modal.is-open .coupon-modal__gift,
+  .coupon-modal__scroll-hint,
+  .coupon-fireworks.is-active .coupon-fireworks__burst--a,
+  .coupon-fireworks.is-active .coupon-fireworks__burst--b,
+  .coupon-fireworks.is-active .coupon-fireworks__burst--c,
+  .coupon-fireworks.is-active .coupon-fireworks__spark,
+  .coupon-fireworks.is-active .coupon-fireworks__ring--1,
+  .coupon-fireworks.is-active .coupon-fireworks__ring--2,
+  .coupon-fireworks.is-active .coupon-fireworks__toast {
+    animation: none;
+  }
+
+  .coupon-fireworks.is-active .coupon-fireworks__toast {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  .category-rails__track,
+  .deal-rail__track {
+    scroll-behavior: auto;
+  }
+}
+
+.category-rails__track,
+.deal-rail__track {
+  scroll-behavior: smooth;
+}

@@ -1903,7 +1903,7 @@
 /* Admin desktop shell */
 @media (min-width: 768px) {
   .admin-shell {
-    grid-template-columns: 240px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .admin-shell.is-nav-open .admin-nav-backdrop {
@@ -1915,13 +1915,20 @@
   }
 
   .admin-sidebar {
-    position: static;
-    inset: auto;
-    width: auto;
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 60;
+    width: 240px;
+    height: 100dvh;
     transform: none;
     transition: none;
     padding: 20px 14px;
     border-right: 1px solid var(--color-border);
+    overflow-y: auto;
+  }
+
+  .admin-main {
+    margin-left: 240px;
   }
 
   .admin-sidebar__head {
@@ -2018,7 +2025,7 @@
   }
 
   .admin-category-row {
-    grid-template-columns: 56px minmax(0, 1fr) auto;
+    grid-template-columns: 32px 56px minmax(0, 1fr) auto;
   }
 
   .admin-category-row__actions {
@@ -2028,6 +2035,7 @@
   }
 
   .admin-category-row.is-child {
+    grid-template-columns: 56px minmax(0, 1fr) auto;
     padding-left: 40px;
   }
 

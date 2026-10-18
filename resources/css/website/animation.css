@@ -245,6 +245,10 @@
   transition: transform 220ms ease;
 }
 
+.admin-category-row__toggle-icon {
+  transition: transform 180ms ease;
+}
+
 .admin-nav-backdrop {
   transition: opacity 180ms ease, visibility 180ms ease;
 }

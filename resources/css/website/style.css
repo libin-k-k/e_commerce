@@ -669,10 +669,14 @@ button {
   align-items: center;
   justify-content: center;
   gap: 2px;
+  min-width: 0;
   min-height: var(--bottom-nav-h);
+  padding: 0 2px;
   color: var(--color-text-secondary);
   font-size: 0.625rem;
   font-weight: 600;
+  line-height: 1.1;
+  white-space: nowrap;
 }
 
 .bottom-nav__item.is-active {
@@ -1148,13 +1152,22 @@ button {
   padding-bottom: var(--space-5);
 }
 
+.category-rails {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
 .category-rails__scroller {
   position: relative;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 .category-rails__track {
   display: flex;
   gap: 12px;
+  min-width: 0;
+  max-width: 100%;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scroll-padding-inline: var(--page-pad);
@@ -1238,13 +1251,22 @@ button {
   visibility: hidden;
 }
 
+.deal-rail {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
 .deal-rail__scroller {
   position: relative;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 .deal-rail__track {
   display: flex;
   gap: 12px;
+  min-width: 0;
+  max-width: 100%;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scroll-padding-inline: var(--page-pad);

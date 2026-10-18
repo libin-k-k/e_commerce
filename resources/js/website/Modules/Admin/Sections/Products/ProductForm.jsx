@@ -59,6 +59,7 @@ export default function ProductForm({
                 })),
             ),
             variants: JSON.stringify(product?.variants ?? []),
+            quantity_discounts: JSON.stringify(product?.quantity_discounts ?? []),
         }),
         [product],
     );
@@ -88,6 +89,13 @@ export default function ProductForm({
     const [mainPreviewUrl, setMainPreviewUrl] = useState(product?.main_image_url ?? null);
     const [sizeDraft, setSizeDraft] = useState('');
     const [colorDraft, setColorDraft] = useState({ name: '', hex: '#111827' });
+    const [quantityDiscounts, setQuantityDiscounts] = useState(() =>
+        (product?.quantity_discounts ?? []).map((row) => ({
+            min_quantity: row.min_quantity ?? 3,
+            type: row.type ?? 'bundle',
+            value: row.value ?? '',
+        })),
+    );
 
     const selectedCategory = options.categories.find(
         (item) => String(item.value) === String(data.category_id),
@@ -160,6 +168,15 @@ export default function ProductForm({
                     stock: Number(row.stock || 0),
                 })),
             ),
+            quantity_discounts: JSON.stringify(
+                quantityDiscounts
+                    .map((row) => ({
+                        min_quantity: Number(row.min_quantity || 0),
+                        type: row.type || 'bundle',
+                        value: row.value === '' ? null : Number(row.value),
+                    }))
+                    .filter((row) => row.min_quantity >= 2 && row.value !== null && row.value > 0),
+            ),
             remove_image_ids: JSON.stringify(removeImageIds),
             subcategory_id:
                 form.subcategory_id === '' || form.subcategory_id === null
@@ -197,6 +214,25 @@ export default function ProductForm({
             next[index] = { ...next[index], [field]: value };
             return next;
         });
+    };
+
+    const updateQuantityDiscount = (index, field, value) => {
+        setQuantityDiscounts((current) => {
+            const next = [...current];
+            next[index] = { ...next[index], [field]: value };
+            return next;
+        });
+    };
+
+    const addQuantityDiscount = () => {
+        setQuantityDiscounts((current) => [
+            ...current,
+            { min_quantity: 3, type: 'bundle', value: '' },
+        ]);
+    };
+
+    const removeQuantityDiscount = (index) => {
+        setQuantityDiscounts((current) => current.filter((_, rowIndex) => rowIndex !== index));
     };
 
     const removeExistingImage = (id) => {
@@ -558,6 +594,100 @@ export default function ProductForm({
                         Add color
                     </button>
                 </div>
+            </fieldset>
+
+            <fieldset className="banner-form__fieldset">
+                <legend className="banner-form__legend">Quantity offers</legend>
+                <p className="product-form__hint">
+                    Example: price ₹250 each, add offer min qty 3 + bundle total ₹650. Also supports
+                    percent or fixed ₹ off when quantity reaches the minimum.
+                </p>
+                {quantityDiscounts.length > 0 ? (
+                    <div className="product-form__matrix-wrap">
+                        <table className="product-form__matrix">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Min qty</th>
+                                    <th scope="col">Type</th>
+                                    <th scope="col">Value</th>
+                                    <th scope="col"> </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {quantityDiscounts.map((row, index) => (
+                                    <tr key={`qty-offer-${index}`}>
+                                        <td>
+                                            <input
+                                                className="banner-form__input"
+                                                type="number"
+                                                min="2"
+                                                value={row.min_quantity}
+                                                onChange={(event) =>
+                                                    updateQuantityDiscount(
+                                                        index,
+                                                        'min_quantity',
+                                                        Number(event.target.value),
+                                                    )
+                                                }
+                                                required
+                                            />
+                                        </td>
+                                        <td>
+                                            <select
+                                                className="banner-form__input"
+                                                value={row.type}
+                                                onChange={(event) =>
+                                                    updateQuantityDiscount(index, 'type', event.target.value)
+                                                }
+                                            >
+                                                <option value="bundle">Bundle total (₹ for pack)</option>
+                                                <option value="percent">Percent off (%)</option>
+                                                <option value="fixed">Fixed off (₹ on line)</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input
+                                                className="banner-form__input"
+                                                type="number"
+                                                min="0.01"
+                                                step="0.01"
+                                                value={row.value}
+                                                onChange={(event) =>
+                                                    updateQuantityDiscount(index, 'value', event.target.value)
+                                                }
+                                                placeholder={
+                                                    row.type === 'percent'
+                                                        ? '%'
+                                                        : row.type === 'fixed'
+                                                          ? '₹ off'
+                                                          : '₹ pack total'
+                                                }
+                                                required
+                                            />
+                                        </td>
+                                        <td>
+                                            <button
+                                                type="button"
+                                                className="admin-table__link is-danger"
+                                                onClick={() => removeQuantityDiscount(index)}
+                                            >
+                                                Remove
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                ) : (
+                    <p className="product-options__empty">No quantity offers. Optional multi-buy deals.</p>
+                )}
+                <button type="button" className="btn btn--primary btn--compact" onClick={addQuantityDiscount}>
+                    Add quantity offer
+                </button>
+                {errors.quantity_discounts ? (
+                    <span className="banner-form__error">{errors.quantity_discounts}</span>
+                ) : null}
             </fieldset>
 
             {hasVariantMatrix ? (

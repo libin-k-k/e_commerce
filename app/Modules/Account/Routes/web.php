@@ -2,6 +2,7 @@
 
 use App\Modules\Account\Http\Controllers\AccountController;
 use App\Modules\Account\Http\Controllers\AddressController;
+use App\Modules\Account\Http\Controllers\Auth\GoogleAuthController;
 use App\Modules\Account\Http\Controllers\Auth\LoginController;
 use App\Modules\Account\Http\Controllers\Auth\RegisterController;
 use Illuminate\Support\Facades\Route;
@@ -11,6 +12,8 @@ Route::middleware('guest')->group(function (): void {
     Route::post('/login', [LoginController::class, 'store'])->name('login.store');
     Route::get('/register', [RegisterController::class, 'create'])->name('register');
     Route::post('/register', [RegisterController::class, 'store'])->name('register.store');
+    Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])->name('auth.google');
+    Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
 });
 
 Route::post('/logout', [LoginController::class, 'destroy'])
@@ -18,6 +21,11 @@ Route::post('/logout', [LoginController::class, 'destroy'])
     ->name('logout');
 
 Route::middleware('auth')->group(function (): void {
+    Route::get('/register/google/complete', [GoogleAuthController::class, 'completeForm'])
+        ->name('register.google.complete');
+    Route::post('/register/google/complete', [GoogleAuthController::class, 'complete'])
+        ->name('register.google.complete.store');
+
     Route::get('/account', [AccountController::class, 'index'])->name('account.index');
     Route::get('/account/profile', [AccountController::class, 'profile'])->name('account.profile');
     Route::put('/account/profile', [AccountController::class, 'updateProfile'])->name('account.profile.update');

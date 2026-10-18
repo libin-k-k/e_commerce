@@ -1,4 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
+import BrandLogo from './BrandLogo';
 
 export default function Footer() {
     const { appName } = usePage().props;
@@ -8,7 +9,7 @@ export default function Footer() {
         <footer className="site-footer">
             <div className="site-footer__inner">
                 <div>
-                    <p className="site-footer__brand">{appName}</p>
+                    <BrandLogo className="site-footer__logo" />
                     <p className="site-footer__text">
                         Shop curated products with a fast, mobile-first checkout experience.
                     </p>

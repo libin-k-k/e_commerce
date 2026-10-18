@@ -54,6 +54,11 @@ class Category extends Model
             ->orderBy('name');
     }
 
+    public function products(): HasMany
+    {
+        return $this->hasMany(Product::class, 'category_id');
+    }
+
     public function subcategoryProducts(): HasMany
     {
         return $this->hasMany(Product::class, 'subcategory_id');

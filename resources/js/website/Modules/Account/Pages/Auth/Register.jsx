@@ -1,4 +1,6 @@
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
+import BrandLogo from '../../../../Shared/Components/BrandLogo';
+import GoogleAuthButton from '../../../../Shared/Components/GoogleAuthButton';
 import StorefrontLayout from '../../../../Shared/Layouts/StorefrontLayout';
 
 const emptyAddress = () => ({
@@ -11,7 +13,6 @@ const emptyAddress = () => ({
 });
 
 export default function Register({ seo, addressLabels = ['Home', 'Work', 'Other'] }) {
-    const { appName } = usePage().props;
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         email: '',
@@ -71,11 +72,15 @@ export default function Register({ seo, addressLabels = ['Home', 'Work', 'Other'
             <Head title={seo?.title} />
             <section className="auth-page">
                 <div className="auth-page__card auth-page__card--wide">
-                    <p className="auth-page__brand">{appName}</p>
+                    <BrandLogo className="auth-page__logo" />
                     <h1 className="auth-page__title">Create account</h1>
                     <p className="auth-page__text">
                         Mobile is required. Email is optional. Add one or more delivery addresses.
                     </p>
+                    <GoogleAuthButton label="Sign up with Google" />
+                    <div className="auth-divider" role="separator" aria-label="or">
+                        <span>or</span>
+                    </div>
                     <form className="auth-page__form" onSubmit={onSubmit}>
                         <label className="auth-page__label" htmlFor="register-name">
                             Name

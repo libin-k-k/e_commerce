@@ -42,6 +42,13 @@ export default function ImageCropField({
             return;
         }
 
+        if (file.type === 'image/gif' || /\.gif$/i.test(file.name)) {
+            onChange(file);
+            setLocalPreview(URL.createObjectURL(file));
+
+            return;
+        }
+
         const url = URL.createObjectURL(file);
         const image = new Image();
         image.onload = () => {

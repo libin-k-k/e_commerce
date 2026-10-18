@@ -4,10 +4,14 @@ namespace App\Modules\Banner\Http\Controllers\Admin;
 
 use App\Core\Seo\SeoJsonLoader;
 use App\Http\Controllers\Controller;
+use App\Modules\Banner\Enums\BannerPosition;
+use App\Modules\Banner\Http\Requests\Admin\ReorderBannersRequest;
 use App\Modules\Banner\Http\Requests\Admin\StoreBannerRequest;
 use App\Modules\Banner\Http\Requests\Admin\UpdateBannerRequest;
+use App\Modules\Banner\Http\Requests\Admin\UpdateBannerSectionsRequest;
 use App\Modules\Banner\Services\BannerAdminService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -23,15 +27,21 @@ class BannerController extends Controller
         return Inertia::render('Admin/Pages/Banners/Index', [
             'seo' => $this->seoJsonLoader->load('Modules/Admin/Banners/index'),
             'banners' => $this->bannerAdminService->list(),
+            'sections' => $this->bannerAdminService->sections(),
             'options' => $this->bannerAdminService->formOptions(),
         ]);
     }
 
-    public function create(): Response
+    public function create(Request $request): Response
     {
+        $position = BannerPosition::tryFrom((string) $request->query('position', ''));
+
         return Inertia::render('Admin/Pages/Banners/Create', [
             'seo' => $this->seoJsonLoader->load('Modules/Admin/Banners/create'),
-            'options' => $this->bannerAdminService->formOptions(),
+            'options' => [
+                ...$this->bannerAdminService->formOptions(),
+                'initialPosition' => $position?->value,
+            ],
         ]);
     }
 
@@ -73,6 +83,24 @@ class BannerController extends Controller
         return redirect()
             ->route('admin.banners.index')
             ->with('success', 'Banner updated.');
+    }
+
+    public function reorder(ReorderBannersRequest $request): RedirectResponse
+    {
+        $this->bannerAdminService->reorder($request->validated('ids'));
+
+        return redirect()
+            ->route('admin.banners.index')
+            ->with('success', 'Banner order saved.');
+    }
+
+    public function updateSections(UpdateBannerSectionsRequest $request): RedirectResponse
+    {
+        $this->bannerAdminService->updateSections($request->validated('sections'));
+
+        return redirect()
+            ->route('admin.banners.index')
+            ->with('success', 'Banner sections updated.');
     }
 
     public function destroy(int $banner): RedirectResponse

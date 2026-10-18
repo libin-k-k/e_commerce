@@ -40,11 +40,27 @@ class BannerRepository implements BannerRepositoryInterface
         $banner->delete();
     }
 
+    public function reorder(array $ids): void
+    {
+        foreach (array_values($ids) as $index => $id) {
+            Banner::query()->whereKey($id)->update(['sort_order' => $index]);
+        }
+    }
+
     public function activeByPosition(BannerPosition $position): Collection
     {
         return Banner::query()
             ->where('position', $position)
             ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderByDesc('id')
+            ->get();
+    }
+
+    public function byPosition(BannerPosition $position): Collection
+    {
+        return Banner::query()
+            ->where('position', $position)
             ->orderBy('sort_order')
             ->orderByDesc('id')
             ->get();

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Number;
 
 class Product extends Model
@@ -87,6 +88,11 @@ class Product extends Model
     public function variants(): HasMany
     {
         return $this->hasMany(ProductVariant::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function quantityDiscounts(): HasMany
+    {
+        return $this->hasMany(ProductQuantityDiscount::class)->orderBy('min_quantity')->orderBy('id');
     }
 
     public function hasVariants(): bool
@@ -185,6 +191,10 @@ class Product extends Model
                 'hex' => $color->hex,
             ])->values()->all(),
             'variants' => $variants->map(fn (ProductVariant $variant): array => $variant->toAdminArray())->values()->all(),
+            'quantity_discounts' => $this->quantityDiscountCollection()
+                ->map(fn (ProductQuantityDiscount $tier): array => $tier->toAdminArray())
+                ->values()
+                ->all(),
             'updated_at' => $this->updated_at?->toDateTimeString(),
         ];
     }
@@ -281,6 +291,10 @@ class Product extends Model
             ])->values()->all(),
             'sizes' => $sizes->pluck('name')->values()->all(),
             'variants' => $variants->map(fn (ProductVariant $variant): array => $variant->toStorefrontArray())->values()->all(),
+            'quantityDiscounts' => $this->quantityDiscountCollection()
+                ->map(fn (ProductQuantityDiscount $tier): array => $tier->toStorefrontArray())
+                ->values()
+                ->all(),
             'image' => $images[0] ?? $main,
             'images' => $images,
             'category' => $this->category?->slug,
@@ -290,6 +304,16 @@ class Product extends Model
             'meta_keywords' => array_filter([$this->name, $this->category?->name, $this->sku]),
             'is_indexable' => ! $this->is_unlaunched,
         ];
+    }
+
+    /**
+     * @return Collection<int, ProductQuantityDiscount>
+     */
+    private function quantityDiscountCollection()
+    {
+        return $this->relationLoaded('quantityDiscounts')
+            ? $this->quantityDiscounts
+            : $this->quantityDiscounts()->get();
     }
 
     private function displayPrice(): float

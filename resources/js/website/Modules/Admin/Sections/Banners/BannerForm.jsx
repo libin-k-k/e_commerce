@@ -13,12 +13,15 @@ const emptyDefaults = {
     category_slug: '',
     button_text: '',
     sort_order: 0,
+    display_width: '',
+    display_height: '',
     is_active: true,
 };
 
 export default function BannerForm({
     options,
     banner = null,
+    initialPosition = null,
     submitUrl,
     method = 'post',
     submitLabel = 'Create Banner',
@@ -27,6 +30,7 @@ export default function BannerForm({
     const initial = useMemo(
         () => ({
             ...emptyDefaults,
+            ...(initialPosition ? { position: initialPosition } : {}),
             ...(banner
                 ? {
                       title: banner.title ?? '',
@@ -38,13 +42,15 @@ export default function BannerForm({
                       category_slug: banner.category_slug ?? '',
                       button_text: banner.button_text ?? '',
                       sort_order: banner.sort_order ?? 0,
+                      display_width: banner.display_width ?? '',
+                      display_height: banner.display_height ?? '',
                       is_active: Boolean(banner.is_active),
                   }
                 : {}),
             web_image: null,
             mobile_image: null,
         }),
-        [banner],
+        [banner, initialPosition],
     );
 
     const { data, setData, post, processing, errors, transform } = useForm(initial);
@@ -68,12 +74,12 @@ export default function BannerForm({
     const onSubmit = (event) => {
         event.preventDefault();
 
-        if (method === 'put') {
-            transform((form) => ({
-                ...form,
-                _method: 'put',
-            }));
-        }
+        transform((form) => ({
+            ...form,
+            ...(method === 'put' ? { _method: 'put' } : {}),
+            display_width: form.display_width === '' ? null : form.display_width,
+            display_height: form.display_height === '' ? null : form.display_height,
+        }));
 
         post(submitUrl, {
             forceFormData: true,
@@ -277,6 +283,34 @@ export default function BannerForm({
                             value={data.sort_order}
                             onChange={(event) => setData('sort_order', Number(event.target.value))}
                         />
+                    </label>
+
+                    <label className="banner-form__field">
+                        <span className="banner-form__label">Width (px)</span>
+                        <input
+                            className="banner-form__input"
+                            type="number"
+                            min="40"
+                            max="4000"
+                            value={data.display_width}
+                            onChange={(event) => setData('display_width', event.target.value)}
+                            placeholder="Auto"
+                        />
+                        {errors.display_width ? <span className="banner-form__error">{errors.display_width}</span> : null}
+                    </label>
+
+                    <label className="banner-form__field">
+                        <span className="banner-form__label">Height (px)</span>
+                        <input
+                            className="banner-form__input"
+                            type="number"
+                            min="40"
+                            max="4000"
+                            value={data.display_height}
+                            onChange={(event) => setData('display_height', event.target.value)}
+                            placeholder="Auto"
+                        />
+                        {errors.display_height ? <span className="banner-form__error">{errors.display_height}</span> : null}
                     </label>
 
                     <label className="banner-form__check">

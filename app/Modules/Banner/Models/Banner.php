@@ -27,6 +27,8 @@ class Banner extends Model
         'category_slug',
         'button_text',
         'sort_order',
+        'display_width',
+        'display_height',
         'is_active',
     ];
 
@@ -40,6 +42,8 @@ class Banner extends Model
             'style' => BannerStyle::class,
             'navigation_link' => BannerNavigationLink::class,
             'sort_order' => 'integer',
+            'display_width' => 'integer',
+            'display_height' => 'integer',
             'is_active' => 'boolean',
         ];
     }
@@ -87,6 +91,8 @@ class Banner extends Model
             'category_slug' => $this->category_slug,
             'button_text' => $this->button_text,
             'sort_order' => $this->sort_order,
+            'display_width' => $this->display_width,
+            'display_height' => $this->display_height,
             'is_active' => $this->is_active,
             'href' => $this->resolvedHref(),
             'updated_at' => $this->updated_at?->toDateTimeString(),
@@ -111,6 +117,8 @@ class Banner extends Model
             'image' => $webImage,
             'web_image' => $webImage,
             'mobile_image' => $mobileImage,
+            'displayWidth' => $this->display_width,
+            'displayHeight' => $this->display_height,
         ];
     }
 

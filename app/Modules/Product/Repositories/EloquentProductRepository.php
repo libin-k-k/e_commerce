@@ -10,6 +10,7 @@ use App\Modules\Product\Models\ProductSize;
 use App\Modules\Product\Models\ProductVariant;
 use App\Modules\Product\Repositories\Contracts\ProductRepositoryInterface;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 
 class EloquentProductRepository implements ProductRepositoryInterface
 {
@@ -173,6 +174,59 @@ class EloquentProductRepository implements ProductRepositoryInterface
             ->all();
     }
 
+    public function featuredByCategory(int $categoryLimit = 3, int $perCategory = 4): array
+    {
+        $categories = Category::query()
+            ->whereNull('parent_id')
+            ->where('is_active', true)
+            ->whereHas('products', fn (Builder $query): Builder => $query->where('is_unlaunched', false))
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->limit($categoryLimit)
+            ->get();
+
+        if ($categories->isEmpty()) {
+            return [];
+        }
+
+        $ranked = Product::query()
+            ->select('id')
+            ->selectRaw('row_number() over (partition by category_id order by sort_order asc, id desc) as category_rank')
+            ->where('is_unlaunched', false)
+            ->whereIn('category_id', $categories->modelKeys());
+
+        $productIds = DB::query()
+            ->fromSub($ranked, 'ranked_products')
+            ->where('category_rank', '<=', $perCategory)
+            ->pluck('id');
+
+        $products = $this->launchedQuery()
+            ->whereIn('id', $productIds)
+            ->orderBy('sort_order')
+            ->orderByDesc('id')
+            ->get()
+            ->groupBy(fn (Product $product): int => (int) $product->category_id);
+
+        return $categories
+            ->map(function (Category $category) use ($products): array {
+                $items = $products
+                    ->get($category->id, collect())
+                    ->map(fn (Product $product): array => $product->toStorefrontArray())
+                    ->values()
+                    ->all();
+
+                return [
+                    'name' => $category->name,
+                    'slug' => $category->slug,
+                    'href' => '/products?category='.rawurlencode($category->slug),
+                    'products' => $items,
+                ];
+            })
+            ->filter(fn (array $category): bool => $category['products'] !== [])
+            ->values()
+            ->all();
+    }
+
     public function onSale(): array
     {
         return $this->launchedQuery()
@@ -273,6 +327,7 @@ class EloquentProductRepository implements ProductRepositoryInterface
                 'colors',
                 'variants.size',
                 'variants.color',
+                'quantityDiscounts',
             ])
             ->where('is_unlaunched', false);
     }

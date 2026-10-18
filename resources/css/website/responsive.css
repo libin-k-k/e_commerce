@@ -485,10 +485,9 @@
     justify-self: start;
   }
 
-  .site-header__brand-name {
-    font-size: 1.45rem;
-    letter-spacing: -0.045em;
-    color: var(--color-primary);
+  .site-header__logo-img {
+    height: 40px;
+    max-width: 180px;
   }
 
   .site-header__search-btn {
@@ -951,6 +950,35 @@
   .section .product-grid {
     width: var(--container);
     margin-inline: auto;
+  }
+
+  .deal-rail__scroller {
+    width: var(--container);
+    margin-inline: auto;
+  }
+
+  .deal-rail__track {
+    padding-inline: 0;
+    scroll-padding-inline: 0;
+  }
+
+  .deal-rail__card {
+    flex-basis: min(360px, 46%);
+  }
+
+  .category-rails__scroller {
+    width: var(--container);
+    margin-inline: auto;
+  }
+
+  .category-rails__track {
+    padding-inline: 0;
+    scroll-padding-inline: 0;
+  }
+
+  .category-rails__grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-4);
   }
 
   .section {
@@ -1813,8 +1841,9 @@
     --page-pad: clamp(1.5rem, 3.2vw, 2.75rem);
   }
 
-  .site-header__brand-name {
-    font-size: 1.65rem;
+  .site-header__logo-img {
+    height: 44px;
+    max-width: 200px;
   }
 
   .category-bar__links > li:nth-child(n + 6):not(:last-child) {
@@ -1975,6 +2004,10 @@
 
   .admin-card-list {
     display: none;
+  }
+
+  .admin-card-list.is-always {
+    display: grid;
   }
 
   .admin-table-wrap {

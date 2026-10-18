@@ -103,6 +103,9 @@ export default function CartLine({
                         </>
                     ) : null}
                     {item.quantity > 1 ? <span className="cart-line__each">{formatMoney(item.unit_price)} each</span> : null}
+                    {item.quantity_discount?.label ? (
+                        <span className="cart-line__qty-offer">{item.quantity_discount.label}</span>
+                    ) : null}
                 </div>
             </div>
         </li>

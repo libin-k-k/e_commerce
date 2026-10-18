@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 
-export default function OfferZoneBannerSection({ banners = [], stats = {} }) {
+export default function OfferZoneBannerSection({ banners = [], stats = {}, eyebrow = 'Offer Zone', schedule = null }) {
     const { appName } = usePage().props;
     const [index, setIndex] = useState(0);
     const total = banners.length;
@@ -53,7 +53,7 @@ export default function OfferZoneBannerSection({ banners = [], stats = {} }) {
             <div className="offer-page__hero-glow" aria-hidden="true" />
             <div className="offer-page__hero-inner">
                 <div className="offer-page__hero-copy">
-                    <p className="offer-page__eyebrow rise-in">Offer Zone</p>
+                    <p className="offer-page__eyebrow rise-in">{eyebrow || 'Offer Zone'}</p>
                     <h1 id="offer-page-title" className="offer-page__title rise-in rise-in-delay-1">
                         {slide.title || appName}
                     </h1>
@@ -71,9 +71,15 @@ export default function OfferZoneBannerSection({ banners = [], stats = {} }) {
                 </div>
                 <aside className="offer-page__hero-aside" aria-hidden="true">
                     <div className="offer-page__hero-panel">
-                        <p className="offer-page__hero-panel-label">Limited time</p>
-                        <p className="offer-page__hero-panel-value">{count}</p>
-                        <p className="offer-page__hero-panel-text">active deals across the store</p>
+                        {schedule?.countdownEnabled && schedule.endsAt ? (
+                            <BannerCountdown endsAt={schedule.endsAt} />
+                        ) : (
+                            <>
+                                <p className="offer-page__hero-panel-label">Limited time</p>
+                                <p className="offer-page__hero-panel-value">{count}</p>
+                                <p className="offer-page__hero-panel-text">active deals across the store</p>
+                            </>
+                        )}
                     </div>
                 </aside>
             </div>
@@ -93,5 +99,32 @@ export default function OfferZoneBannerSection({ banners = [], stats = {} }) {
                 </div>
             ) : null}
         </header>
+    );
+}
+
+function BannerCountdown({ endsAt }) {
+    const [label, setLabel] = useState('');
+
+    useEffect(() => {
+        const tick = () => {
+            const remaining = Math.max(0, Math.floor((new Date(endsAt).getTime() - Date.now()) / 1000));
+            const hours = String(Math.floor(remaining / 3600)).padStart(2, '0');
+            const minutes = String(Math.floor((remaining % 3600) / 60)).padStart(2, '0');
+            const seconds = String(remaining % 60).padStart(2, '0');
+            setLabel(`${hours}h : ${minutes}m : ${seconds}s`);
+        };
+
+        tick();
+        const timer = window.setInterval(tick, 1000);
+
+        return () => window.clearInterval(timer);
+    }, [endsAt]);
+
+    return (
+        <>
+            <p className="offer-page__hero-panel-label">Ends in</p>
+            <p className="offer-page__hero-panel-value offer-page__hero-panel-value--timer">{label}</p>
+            <p className="offer-page__hero-panel-text">banner countdown</p>
+        </>
     );
 }

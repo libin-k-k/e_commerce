@@ -1,7 +1,7 @@
 import StorefrontLayout from '../../../Shared/Layouts/StorefrontLayout';
 import BenefitsSection from '../Sections/BenefitsSection';
 import CategoryScrollSection from '../Sections/CategoryScrollSection';
-import FeaturedProductsSection from '../Sections/FeaturedProductsSection';
+import DealCardRail from '../Sections/DealCardRail';
 import FlashDealsSection from '../Sections/FlashDealsSection';
 import HeroBannerSection from '../Sections/HeroBannerSection';
 import LandscapePromoSection from '../Sections/LandscapePromoSection';
@@ -14,7 +14,8 @@ export default function Home({
     quickCategories = [],
     heroBanners = [],
     offers = [],
-    products = [],
+    offerPage = null,
+    dealCards = [],
     deals = [],
     dealsBanner = null,
     landscapeBanners = [],
@@ -31,8 +32,8 @@ export default function Home({
                     <FlashDealsSection products={deals} banner={dealsBanner} />
                     <TopCategoriesSection />
                 </div>
-                <OfferZoneSection offers={offers} />
-                <FeaturedProductsSection products={products} />
+                <OfferZoneSection offers={offers} offerPage={offerPage} />
+                <DealCardRail cards={dealCards} />
                 <LandscapePromoSection banners={landscapeBanners} label="Middle banners" />
                 <LandscapePromoSection banners={footerBanners} label="Footer banners" />
                 <div className="desktop-enhance">

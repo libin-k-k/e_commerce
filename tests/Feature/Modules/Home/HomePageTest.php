@@ -28,12 +28,76 @@ class HomePageTest extends TestCase
             ->has('seo.keywords')
             ->has('quickCategories')
             ->has('offers')
-            ->has('products')
+            ->has('categoryShowcases')
             ->has('heroBanners')
             ->has('landscapeBanners')
             ->has('footerBanners')
             ->where('appName', config('app.name'))
         );
+    }
+
+    public function test_home_page_shows_four_products_for_the_first_three_categories(): void
+    {
+        $inactive = Category::factory()->inactive()->create([
+            'name' => 'Hidden',
+            'slug' => 'hidden',
+            'sort_order' => 0,
+        ]);
+        $alpha = Category::factory()->create(['name' => 'Alpha', 'slug' => 'alpha', 'sort_order' => 1]);
+        $beta = Category::factory()->create(['name' => 'Beta', 'slug' => 'beta', 'sort_order' => 2]);
+        $gamma = Category::factory()->create(['name' => 'Gamma', 'slug' => 'gamma', 'sort_order' => 3]);
+        $delta = Category::factory()->create(['name' => 'Delta', 'slug' => 'delta', 'sort_order' => 4]);
+        $child = Category::factory()->childOf($alpha)->create(['name' => 'Alpha Child', 'slug' => 'alpha-child', 'sort_order' => 1]);
+
+        Product::factory()->create([
+            'category_id' => $inactive->id,
+            'slug' => 'hidden-product',
+            'sort_order' => 1,
+        ]);
+
+        foreach (range(1, 5) as $order) {
+            Product::factory()->create([
+                'category_id' => $alpha->id,
+                'slug' => 'alpha-'.$order,
+                'sort_order' => $order,
+            ]);
+        }
+
+        Product::factory()->unlaunched()->create([
+            'category_id' => $alpha->id,
+            'slug' => 'alpha-hidden',
+            'sort_order' => 0,
+        ]);
+
+        Product::factory()->create([
+            'category_id' => $alpha->id,
+            'subcategory_id' => $child->id,
+            'slug' => 'alpha-child-product',
+            'sort_order' => 6,
+        ]);
+
+        foreach ([$beta, $gamma, $delta] as $category) {
+            Product::factory()->count(2)->create([
+                'category_id' => $category->id,
+            ]);
+        }
+
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('categoryShowcases', 3)
+                ->where('categoryShowcases.0.name', 'Alpha')
+                ->where('categoryShowcases.0.slug', 'alpha')
+                ->where('categoryShowcases.0.href', '/products?category=alpha')
+                ->has('categoryShowcases.0.products', 4)
+                ->where('categoryShowcases.0.products.0.slug', 'alpha-1')
+                ->where('categoryShowcases.0.products.3.slug', 'alpha-4')
+                ->where('categoryShowcases.1.slug', 'beta')
+                ->has('categoryShowcases.1.products', 2)
+                ->where('categoryShowcases.1.href', '/products?category=beta')
+                ->where('categoryShowcases.2.slug', 'gamma')
+                ->where('categoryShowcases', fn ($showcases): bool => collect($showcases)->pluck('slug')->all() === ['alpha', 'beta', 'gamma'])
+            );
     }
 
     public function test_home_page_loads_active_banners_from_database(): void

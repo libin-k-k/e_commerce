@@ -109,4 +109,14 @@
   --page-pad: clamp(0.75rem, 3.2vw, 1.5rem);
   --container: calc(100% - 2 * var(--page-pad));
   --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+
+  /* Coupon modal */
+  --color-coupon-modal-from: #ff7ba0;
+  --color-coupon-modal-to: #ff8c5f;
+  --color-coupon-ticket-value: #e11d48;
+  --gradient-coupon-modal: linear-gradient(180deg, var(--color-coupon-modal-from) 0%, var(--color-coupon-modal-to) 100%);
+  --gradient-coupon-btn: linear-gradient(135deg, #ff6b8a 0%, #ff8a5c 100%);
+  --gradient-firework-a: #ffd666;
+  --gradient-firework-b: #ff6b8a;
+  --gradient-firework-c: #7dd3fc;
 }

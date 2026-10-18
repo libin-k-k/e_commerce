@@ -78,6 +78,7 @@ class ProductAdminRepository implements ProductAdminRepositoryInterface
             'colors',
             'variants.size',
             'variants.color',
+            'quantityDiscounts',
         ];
     }
 }

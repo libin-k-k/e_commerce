@@ -38,9 +38,11 @@ export default function HeroBannerSection({ slides = [] }) {
                         aria-hidden={i !== index}
                     >
                         <img
-                            className="hero-banner__image"
+                            className={`hero-banner__image${item.displayWidth || item.displayHeight ? ' has-custom-size' : ''}`}
                             src={item.web_image || item.image}
                             alt=""
+                            width={item.displayWidth || undefined}
+                            height={item.displayHeight || undefined}
                             loading={i === 0 ? 'eager' : 'lazy'}
                         />
                         <div className="hero-banner__overlay">
@@ -75,6 +77,12 @@ export default function HeroBannerSection({ slides = [] }) {
                             <ChevronIcon direction="right" />
                         </button>
                     </>
+                ) : null}
+
+                {slide.showCount && total > 1 ? (
+                    <p className="hero-banner__count">
+                        {index + 1} / {total}
+                    </p>
                 ) : null}
 
                 {total > 1 ? (

@@ -32,6 +32,8 @@ class StoreBannerRequest extends FormRequest
             'category_slug' => ['nullable', 'string', 'max:120', 'required_if:navigation_link,category'],
             'button_text' => ['nullable', 'string', 'max:60'],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
+            'display_width' => ['nullable', 'integer', 'min:40', 'max:4000'],
+            'display_height' => ['nullable', 'integer', 'min:40', 'max:4000'],
             'is_active' => ['sometimes', 'boolean'],
         ];
     }
@@ -41,6 +43,8 @@ class StoreBannerRequest extends FormRequest
         $this->merge([
             'is_active' => $this->boolean('is_active'),
             'sort_order' => $this->input('sort_order', 0),
+            'display_width' => $this->filled('display_width') ? $this->input('display_width') : null,
+            'display_height' => $this->filled('display_height') ? $this->input('display_height') : null,
         ]);
     }
 

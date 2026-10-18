@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'mobile', 'password', 'is_admin'])]
+#[Fillable(['name', 'email', 'mobile', 'google_id', 'password', 'is_admin', 'email_verified_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -33,5 +33,18 @@ class User extends Authenticatable
     public function addresses(): HasMany
     {
         return $this->hasMany(UserAddress::class)->orderByDesc('is_default')->orderBy('id');
+    }
+
+    public function hasCompletedRegistration(): bool
+    {
+        if (! filled($this->mobile)) {
+            return false;
+        }
+
+        if ($this->relationLoaded('addresses')) {
+            return $this->addresses->isNotEmpty();
+        }
+
+        return $this->addresses()->exists();
     }
 }

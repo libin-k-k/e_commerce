@@ -35,6 +35,9 @@ class SitemapGenerationTest extends TestCase
 
         $xml = File::get($path);
         $this->assertStringContainsString(route('products.index'), $xml);
+        $this->assertStringContainsString(route('account.about'), $xml);
+        $this->assertStringContainsString(route('legal.privacy'), $xml);
+        $this->assertStringContainsString(route('legal.refund'), $xml);
         $this->assertStringContainsString(route('products.show', ['product' => 'wireless-headphones']), $xml);
         $this->assertStringNotContainsString('hidden-draft', $xml);
     }

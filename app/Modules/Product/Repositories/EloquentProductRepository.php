@@ -3,6 +3,7 @@
 namespace App\Modules\Product\Repositories;
 
 use App\Modules\Category\Models\Category;
+use App\Modules\Product\Enums\PriceRange;
 use App\Modules\Product\Enums\ProductSort;
 use App\Modules\Product\Models\Product;
 use App\Modules\Product\Models\ProductColor;
@@ -57,6 +58,29 @@ class EloquentProductRepository implements ProductRepositoryInterface
         }
 
         return $products->values()->all();
+    }
+
+    public function page(array $filters, ?Category $category, int $page, int $perPage): array
+    {
+        $perPage = max(1, $perPage);
+        $query = $this->pagedQuery($filters, $category);
+        $total = (clone $query)->count();
+        $lastPage = max(1, (int) ceil($total / $perPage));
+        $page = min(max(1, $page), $lastPage);
+
+        $items = $total === 0
+            ? []
+            : (clone $query)
+                ->forPage($page, $perPage)
+                ->get()
+                ->map(fn (Product $product): array => $product->toStorefrontArray())
+                ->values()
+                ->all();
+
+        return [
+            'total' => $total,
+            'items' => $items,
+        ];
     }
 
     public function sizeNames(?Category $category = null): array
@@ -314,6 +338,55 @@ class EloquentProductRepository implements ProductRepositoryInterface
         return $category->isMain()
             ? $query->where('category_id', $category->id)
             : $query->where('subcategory_id', $category->id);
+    }
+
+    /**
+     * @param  array{q: ?string, size: ?string, color: ?string, sort: ProductSort, price: ?PriceRange, minPrice: ?int, maxPrice: ?int, rating: ?int}  $filters
+     */
+    private function pagedQuery(array $filters, ?Category $category): Builder
+    {
+        $sort = $filters['sort'];
+        $priceSql = $this->effectivePriceSql();
+
+        return $this->launchedQuery()
+            ->when($category !== null, fn (Builder $query) => $this->scopeToCategory($query, $category))
+            ->when($filters['q'] !== null, fn (Builder $query) => $this->matchTerm($query, (string) $filters['q']))
+            ->when($filters['size'] !== null, fn (Builder $query) => $query
+                ->whereHas('sizes', fn (Builder $sizes) => $sizes->where('name', $filters['size'])))
+            ->when($filters['color'] !== null, fn (Builder $query) => $query
+                ->whereHas('colors', fn (Builder $colors) => $colors->where('name', $filters['color'])))
+            ->when($filters['rating'] !== null, fn (Builder $query) => $query->where('rating', '>=', $filters['rating']))
+            ->when($filters['price'] !== null, fn (Builder $query) => $this->constrainPrice($query, $priceSql, $filters['price']))
+            ->when($filters['minPrice'] !== null, fn (Builder $query) => $query->whereRaw('('.$priceSql.') >= ?', [$filters['minPrice']]))
+            ->when($filters['maxPrice'] !== null, fn (Builder $query) => $query->whereRaw('('.$priceSql.') <= ?', [$filters['maxPrice']]))
+            ->when($sort === ProductSort::Newest, fn (Builder $query) => $query->orderByDesc('created_at'))
+            ->when($sort === ProductSort::TopRated, fn (Builder $query) => $query->orderByDesc('rating'))
+            ->when($sort === ProductSort::PriceLowToHigh, fn (Builder $query) => $query->orderByRaw('('.$priceSql.') asc'))
+            ->when($sort === ProductSort::PriceHighToLow, fn (Builder $query) => $query->orderByRaw('('.$priceSql.') desc'))
+            ->orderBy('sort_order')
+            ->orderByDesc('id');
+    }
+
+    private function constrainPrice(Builder $query, string $priceSql, PriceRange $price): Builder
+    {
+        [$minimum, $maximum] = $price->bounds();
+
+        return $query
+            ->when($minimum !== null, fn (Builder $scoped) => $scoped->whereRaw('('.$priceSql.') >= ?', [(int) $minimum]))
+            ->when($maximum !== null, fn (Builder $scoped) => $scoped->whereRaw('('.$priceSql.') < ?', [(int) $maximum]));
+    }
+
+    /**
+     * Same amount the product card shows: the lowest variant price when
+     * variants exist, otherwise the sale price when it is a real discount.
+     */
+    private function effectivePriceSql(): string
+    {
+        $variantPrice = 'case when product_variants.sale_price is not null and product_variants.sale_price > 0 and product_variants.sale_price < product_variants.price then product_variants.sale_price else product_variants.price end';
+        $variantMin = '(select min('.$variantPrice.') from product_variants where product_variants.product_id = products.id)';
+        $basePrice = 'case when products.sale_price is not null and products.sale_price > 0 and products.sale_price < products.price then products.sale_price else products.price end';
+
+        return 'case when exists (select 1 from product_variants where product_variants.product_id = products.id) then '.$variantMin.' else '.$basePrice.' end';
     }
 
     private function launchedQuery(): Builder

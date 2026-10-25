@@ -37,10 +37,13 @@ export default function Footer() {
                                 <Link href="/account">My account</Link>
                             </li>
                             <li>
-                                <Link href="/account/orders">Order history</Link>
+                                <Link href="/login">Login</Link>
                             </li>
                             <li>
-                                <Link href="/account/addresses">Addresses</Link>
+                                <Link href="/account/about">About</Link>
+                            </li>
+                            <li>
+                                <Link href="/account/orders">Order history</Link>
                             </li>
                         </ul>
                     </div>
@@ -54,7 +57,16 @@ export default function Footer() {
                                 <Link href="/account/faq">FAQ</Link>
                             </li>
                             <li>
-                                <Link href="/account/policies">Terms & policies</Link>
+                                <Link href="/privacy-policy">Privacy policy</Link>
+                            </li>
+                            <li>
+                                <Link href="/terms-and-conditions">Terms and conditions</Link>
+                            </li>
+                            <li>
+                                <Link href="/shipping-policy">Shipping policy</Link>
+                            </li>
+                            <li>
+                                <Link href="/refund-policy">Refund policy</Link>
                             </li>
                         </ul>
                     </div>

@@ -21,11 +21,26 @@ enum PriceRange: string
 
     public function contains(float $price): bool
     {
+        [$minimum, $maximum] = $this->bounds();
+
+        return ($minimum === null || $price >= $minimum)
+            && ($maximum === null || $price < $maximum);
+    }
+
+    /**
+     * Inclusive minimum and exclusive maximum. Null leaves that side open.
+     * Bounds stay integers because SQLite mis-compares this expression when the
+     * placeholder is bound as a float or a string.
+     *
+     * @return array{0: ?int, 1: ?int}
+     */
+    public function bounds(): array
+    {
         return match ($this) {
-            self::Under100 => $price < 100,
-            self::From100To500 => $price >= 100 && $price < 500,
-            self::From500To1000 => $price >= 500 && $price < 1000,
-            self::Above1000 => $price >= 1000,
+            self::Under100 => [null, 100],
+            self::From100To500 => [100, 500],
+            self::From500To1000 => [500, 1000],
+            self::Above1000 => [1000, null],
         };
     }
 

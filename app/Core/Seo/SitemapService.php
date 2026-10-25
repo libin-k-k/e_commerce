@@ -69,12 +69,23 @@ class SitemapService
             ],
         ];
 
-        if (Route::has('products.index')) {
+        foreach ([
+            'products.index' => ['daily', '0.9'],
+            'account.about' => ['monthly', '0.5'],
+            'legal.privacy' => ['monthly', '0.4'],
+            'legal.terms' => ['monthly', '0.4'],
+            'legal.shipping' => ['monthly', '0.4'],
+            'legal.refund' => ['monthly', '0.4'],
+        ] as $name => [$frequency, $priority]) {
+            if (! Route::has($name)) {
+                continue;
+            }
+
             $urls[] = [
-                'loc' => route('products.index'),
+                'loc' => route($name),
                 'lastmod' => $today,
-                'changefreq' => 'daily',
-                'priority' => '0.9',
+                'changefreq' => $frequency,
+                'priority' => $priority,
             ];
         }
 

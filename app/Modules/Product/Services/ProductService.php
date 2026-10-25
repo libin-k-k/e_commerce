@@ -126,6 +126,68 @@ class ProductService
     }
 
     /**
+     * One database page for the home product feed. Callers request the next
+     * page as the shopper scrolls.
+     *
+     * @param  array{category: ?string, q: ?string, size: ?string, color: ?string, sort: ProductSort, price: ?PriceRange, minPrice: ?int, maxPrice: ?int, rating: ?int, page: int, perPage: int}  $filters
+     * @return array<string, mixed>
+     */
+    public function homeFeed(array $filters): array
+    {
+        $category = $filters['category'] !== null
+            ? $this->categories->findActiveBySlug($filters['category'])
+            : null;
+
+        $perPage = 12;
+        $pageResult = $this->products->page($filters, $category, $filters['page'], $perPage);
+        $total = $pageResult['total'];
+        $products = $pageResult['items'];
+        $lastPage = max(1, (int) ceil($total / $perPage));
+        $page = min($filters['page'], $lastPage);
+        $offset = $total === 0 ? 0 : ($page - 1) * $perPage;
+        $ratingCounts = $this->products->ratingCounts(ProductIndexRequest::RatingOptions, $category);
+
+        return [
+            'products' => $products,
+            'total' => $total,
+            'pagination' => [
+                'page' => $total === 0 ? 1 : $page,
+                'perPage' => $perPage,
+                'lastPage' => $lastPage,
+                'from' => $total === 0 ? 0 : $offset + 1,
+                'to' => $offset + count($products),
+            ],
+            'chips' => $this->categoryChips($category),
+            'filters' => [
+                'category' => $category?->slug,
+                'q' => $filters['q'],
+                'size' => $filters['size'],
+                'color' => $filters['color'],
+                'sort' => $filters['sort']->value,
+                'price' => $filters['price']?->value,
+                'min_price' => $filters['minPrice'],
+                'max_price' => $filters['maxPrice'],
+                'rating' => $filters['rating'],
+            ],
+            'filterOptions' => [
+                'sorts' => ProductSort::options(),
+                'prices' => PriceRange::options(),
+                'sizes' => $this->products->sizeNames($category),
+                'colors' => $this->products->colorOptions($category),
+                'priceCeiling' => $this->products->priceCeiling($category),
+                'ratings' => array_map(
+                    fn (int $rating): array => [
+                        'value' => $rating,
+                        'label' => $rating.'★ & above',
+                        'count' => $ratingCounts[$rating] ?? 0,
+                    ],
+                    ProductIndexRequest::RatingOptions,
+                ),
+            ],
+        ];
+    }
+
+    /**
      * Search-as-you-type results for the storefront search panel. Terms that
      * are too short fall back to the featured products (`matched` is false).
      *

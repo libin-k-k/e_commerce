@@ -17,7 +17,7 @@ const DESKTOP_SEARCH_QUERY = '(min-width: 768px)';
 const isDesktopSearch = () => window.matchMedia(DESKTOP_SEARCH_QUERY).matches;
 
 export default function Header({ current = 'home', onOpenCategories, onOpenCart, onOpenWishlist, onOpenSearch }) {
-    const { appName, cartCount = 0, wishlistCount = 0, auth } = usePage().props;
+    const { appName, cartCount = 0, wishlistCount = 0 } = usePage().props;
     const [query, setQuery] = useState('');
     const [panelOpen, setPanelOpen] = useState(false);
     const formRef = useRef(null);
@@ -254,15 +254,9 @@ export default function Header({ current = 'home', onOpenCategories, onOpenCart,
                         </span>
                         <span className="site-header__action-label">Cart</span>
                     </button>
-                    <Link
-                        href={auth?.user ? '/account' : '/login'}
-                        className="site-header__action"
-                        aria-label={auth?.user ? 'Account' : 'Sign in'}
-                    >
+                    <Link href="/account" className="site-header__action" aria-label="Account">
                         <AccountIcon />
-                        <span className="site-header__action-label">
-                            {auth?.user ? 'Account' : 'Sign in'}
-                        </span>
+                        <span className="site-header__action-label">Account</span>
                     </Link>
                 </div>
             </div>

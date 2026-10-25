@@ -80,6 +80,42 @@ class AccountController extends Controller
         ]));
     }
 
+    public function about(): Response
+    {
+        return Inertia::render('Account/Pages/About', $this->page('Modules/Account/about', [
+            'about' => $this->accountPageService->about(),
+            'active' => 'about',
+        ]));
+    }
+
+    public function privacy(): Response
+    {
+        return $this->legal('privacy');
+    }
+
+    public function terms(): Response
+    {
+        return $this->legal('terms');
+    }
+
+    public function shipping(): Response
+    {
+        return $this->legal('shipping');
+    }
+
+    public function refund(): Response
+    {
+        return $this->legal('refund');
+    }
+
+    private function legal(string $key): Response
+    {
+        return Inertia::render('Account/Pages/Legal', $this->page('Modules/Account/'.$key, [
+            'document' => $this->accountPageService->legal($key),
+            'active' => $key,
+        ]));
+    }
+
     /**
      * @param  array<string, mixed>  $extra
      * @return array<string, mixed>
@@ -88,7 +124,7 @@ class AccountController extends Controller
     {
         return [
             'seo' => $this->seoJsonLoader->load($seoKey),
-            'menu' => $this->accountPageService->menu(),
+            'menu' => $this->accountPageService->menuForVisitor(),
             'profile' => $this->accountPageService->profile(),
             ...$extra,
         ];

@@ -26,7 +26,6 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/register/google/complete', [GoogleAuthController::class, 'complete'])
         ->name('register.google.complete.store');
 
-    Route::get('/account', [AccountController::class, 'index'])->name('account.index');
     Route::get('/account/profile', [AccountController::class, 'profile'])->name('account.profile');
     Route::put('/account/profile', [AccountController::class, 'updateProfile'])->name('account.profile.update');
     Route::get('/account/addresses', [AccountController::class, 'addresses'])->name('account.addresses');
@@ -36,5 +35,11 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/account/orders', [AccountController::class, 'orders'])->name('account.orders');
 });
 
+Route::get('/account', [AccountController::class, 'index'])->name('account.index');
 Route::get('/account/faq', [AccountController::class, 'faq'])->name('account.faq');
+Route::get('/account/about', [AccountController::class, 'about'])->name('account.about');
 Route::get('/account/policies', [AccountController::class, 'policies'])->name('account.policies');
+Route::get('/privacy-policy', [AccountController::class, 'privacy'])->name('legal.privacy');
+Route::get('/terms-and-conditions', [AccountController::class, 'terms'])->name('legal.terms');
+Route::get('/shipping-policy', [AccountController::class, 'shipping'])->name('legal.shipping');
+Route::get('/refund-policy', [AccountController::class, 'refund'])->name('legal.refund');

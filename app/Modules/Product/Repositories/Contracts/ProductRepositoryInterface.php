@@ -17,6 +17,15 @@ interface ProductRepositoryInterface
     public function search(array $filters, ?Category $category = null): array;
 
     /**
+     * One page of launched products. Price filters and price sorts use the
+     * storefront display price in SQL so the page is not loaded in full.
+     *
+     * @param  array{q: ?string, size: ?string, color: ?string, sort: ProductSort, price: ?PriceRange, minPrice: ?int, maxPrice: ?int, rating: ?int}  $filters
+     * @return array{total: int, items: list<array<string, mixed>>}
+     */
+    public function page(array $filters, ?Category $category, int $page, int $perPage): array;
+
+    /**
      * Distinct size names offered by launched products in the category.
      *
      * @return list<string>

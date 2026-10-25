@@ -7,7 +7,9 @@ use App\Http\Controllers\Controller;
 use App\Modules\Banner\Services\BannerStorefrontService;
 use App\Modules\Home\Services\HomePageService;
 use App\Modules\Offer\Services\OfferStorefrontService;
+use App\Modules\Product\Http\Requests\ProductIndexRequest;
 use App\Modules\Product\Services\ProductService;
+use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -29,7 +31,13 @@ class HomeController extends Controller
         return Inertia::render('Home/Pages/Home', [
             'seo' => $seo,
             ...$content,
+            'homeProductsUrl' => route('home.products'),
         ]);
+    }
+
+    public function products(ProductIndexRequest $request): JsonResponse
+    {
+        return response()->json($this->productService->homeFeed($request->filters()));
     }
 
     public function offers(): Response

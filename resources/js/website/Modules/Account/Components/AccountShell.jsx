@@ -1,4 +1,4 @@
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import StorefrontLayout from '../../../Shared/Layouts/StorefrontLayout';
 
 export default function AccountShell({
@@ -8,6 +8,8 @@ export default function AccountShell({
     profile = null,
     children,
 }) {
+    const { auth } = usePage().props;
+
     const logout = () => {
         router.post('/logout');
     };
@@ -44,13 +46,15 @@ export default function AccountShell({
                             <Link href="/account/faq" className="account-sidebar__link account-sidebar__link--help">
                                 Support chat
                             </Link>
-                            <button
-                                type="button"
-                                className="account-sidebar__link account-sidebar__logout"
-                                onClick={logout}
-                            >
-                                Log out
-                            </button>
+                            {auth?.user ? (
+                                <button
+                                    type="button"
+                                    className="account-sidebar__link account-sidebar__logout"
+                                    onClick={logout}
+                                >
+                                    Log out
+                                </button>
+                            ) : null}
                         </nav>
                     </aside>
                     <div className="account-layout__main">{children}</div>

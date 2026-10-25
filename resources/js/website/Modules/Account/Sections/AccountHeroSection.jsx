@@ -8,6 +8,23 @@ export default function AccountHeroSection({ profile }) {
         .map((part) => part[0]?.toUpperCase() ?? '')
         .join('');
 
+    if (profile?.isGuest) {
+        return (
+            <section className="account-hero" aria-label="Account summary">
+                <div className="account-hero__avatar" aria-hidden="true">
+                    G
+                </div>
+                <div className="account-hero__copy">
+                    <h1 className="account-hero__name">Guest</h1>
+                    <p className="account-hero__meta">Sign in to manage orders and addresses.</p>
+                </div>
+                <Link href="/login" className="btn btn--ghost btn--compact account-hero__edit">
+                    Login
+                </Link>
+            </section>
+        );
+    }
+
     return (
         <section className="account-hero" aria-label="Account summary">
             <div className="account-hero__avatar" aria-hidden="true">

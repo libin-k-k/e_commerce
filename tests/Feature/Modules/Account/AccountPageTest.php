@@ -19,10 +19,22 @@ class AccountPageTest extends TestCase
         return User::query()->where('email', 'customer@mail.com')->firstOrFail();
     }
 
-    public function test_guest_is_redirected_from_account_to_login(): void
+    public function test_guest_account_page_lists_login_about_and_policies(): void
     {
         $this->get(route('account.index'))
-            ->assertRedirect(route('login'));
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Account/Pages/Index')
+                ->where('profile.isGuest', true)
+                ->where('menu.0.key', 'login')
+                ->where('menu.0.href', '/login')
+                ->where('menu.4.key', 'about')
+                ->where('menu.6.key', 'privacy')
+                ->where('menu.7.key', 'terms')
+                ->where('menu.8.key', 'shipping')
+                ->where('menu.9.key', 'refund')
+                ->has('menu', 10)
+            );
     }
 
     public function test_account_index_renders(): void
@@ -34,7 +46,10 @@ class AccountPageTest extends TestCase
                 ->component('Account/Pages/Index')
                 ->has('seo.title')
                 ->has('profile.name')
-                ->has('menu', 5)
+                ->has('menu', 9)
+                ->where('menu.3.key', 'about')
+                ->where('menu.5.key', 'privacy')
+                ->where('menu.8.key', 'refund')
             );
     }
 
@@ -165,7 +180,48 @@ class AccountPageTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('Account/Pages/Policies')
-                ->has('policies')
+                ->has('policies', 4)
+                ->where('policies.0.href', '/terms-and-conditions')
             );
+    }
+
+    public function test_about_page_lists_login_and_social_accounts_for_guests(): void
+    {
+        $this->get(route('account.about'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Account/Pages/About')
+                ->has('seo.title')
+                ->has('about.intro')
+                ->has('about.socials', 4)
+                ->where('about.socials.0.name', 'Instagram')
+                ->where('about.socials.1.name', 'Facebook')
+                ->where('about.socials.2.name', 'Telegram')
+                ->where('about.socials.3.name', 'WhatsApp')
+                ->where('menu.0.key', 'login')
+                ->where('menu.1.title', 'Profile')
+                ->where('appName', config('app.name'))
+            );
+    }
+
+    public function test_payment_policy_pages_are_public(): void
+    {
+        $pages = [
+            'legal.privacy' => 'Privacy policy',
+            'legal.terms' => 'Terms and conditions',
+            'legal.shipping' => 'Shipping policy',
+            'legal.refund' => 'Refund policy',
+        ];
+
+        foreach ($pages as $route => $title) {
+            $this->get(route($route))
+                ->assertOk()
+                ->assertInertia(fn ($page) => $page
+                    ->component('Account/Pages/Legal')
+                    ->where('document.title', $title)
+                    ->has('document.sections')
+                    ->has('seo.description')
+                );
+        }
     }
 }

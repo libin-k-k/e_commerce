@@ -9,10 +9,13 @@ export default function Index({ seo, profile, menu = [], active = 'index' }) {
             <AccountHeroSection profile={profile} />
             <AccountMenuSection menu={menu} />
             <section className="account-desktop-welcome" aria-label="Account overview">
-                <h2 className="account-desktop-welcome__title">Welcome back</h2>
+                <h2 className="account-desktop-welcome__title">
+                    {profile?.isGuest ? 'Your account' : 'Welcome back'}
+                </h2>
                 <p className="account-desktop-welcome__text">
-                    Manage your profile, delivery addresses, orders, and store policies from the
-                    menu on the left.
+                    {profile?.isGuest
+                        ? 'Sign in, or open About, policies, and the other sections below.'
+                        : 'Manage your profile, delivery addresses, orders, and store policies from the menu on the left.'}
                 </p>
                 <div className="account-desktop-welcome__cards">
                     {menu.map((item) => (

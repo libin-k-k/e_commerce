@@ -4,6 +4,7 @@ namespace App\Modules\Account\Services;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use InvalidArgumentException;
 
 class AccountPageService
 {
@@ -32,17 +33,63 @@ class AccountPageService
                 'href' => '/account/orders',
             ],
             [
+                'key' => 'about',
+                'title' => 'About',
+                'description' => 'Our story and social accounts',
+                'href' => '/account/about',
+            ],
+            [
                 'key' => 'faq',
                 'title' => 'FAQ',
                 'description' => 'Common shopping questions',
                 'href' => '/account/faq',
             ],
             [
-                'key' => 'policies',
-                'title' => 'Terms & policies',
-                'description' => 'Terms, privacy, and returns',
-                'href' => '/account/policies',
+                'key' => 'privacy',
+                'title' => 'Privacy policy',
+                'description' => 'How we handle your information',
+                'href' => '/privacy-policy',
             ],
+            [
+                'key' => 'terms',
+                'title' => 'Terms and conditions',
+                'description' => 'Rules for using the store',
+                'href' => '/terms-and-conditions',
+            ],
+            [
+                'key' => 'shipping',
+                'title' => 'Shipping policy',
+                'description' => 'Delivery times and charges',
+                'href' => '/shipping-policy',
+            ],
+            [
+                'key' => 'refund',
+                'title' => 'Refund policy',
+                'description' => 'Cancellations and refunds',
+                'href' => '/refund-policy',
+            ],
+        ];
+    }
+
+    /**
+     * Account links shown to a guest, including sign-in.
+     *
+     * @return list<array{key: string, title: string, description: string, href: string}>
+     */
+    public function menuForVisitor(): array
+    {
+        if (Auth::check()) {
+            return $this->menu();
+        }
+
+        return [
+            [
+                'key' => 'login',
+                'title' => 'Login',
+                'description' => 'Sign in or create an account',
+                'href' => '/login',
+            ],
+            ...$this->menu(),
         ];
     }
 
@@ -59,6 +106,7 @@ class AccountPageService
                 'email' => $user->email ?? '',
                 'phone' => $user->mobile ?? '',
                 'memberSince' => $user->created_at?->format('M Y') ?? '',
+                'isGuest' => false,
             ];
         }
 
@@ -67,6 +115,7 @@ class AccountPageService
             'email' => '',
             'phone' => '',
             'memberSince' => '',
+            'isGuest' => true,
         ];
     }
 
@@ -162,32 +211,232 @@ class AccountPageService
     }
 
     /**
-     * @return list<array{id: string, title: string, body: string}>
+     * @return array{title: string, intro: list<string>, socials: list<array{key: string, name: string, handle: string, followers: string, href: string}>}
+     */
+    public function about(): array
+    {
+        $name = (string) config('app.name');
+        $handle = strtolower((string) preg_replace('/[^a-z0-9]+/i', '', $name));
+
+        return [
+            'title' => 'About '.$name,
+            'intro' => [
+                $name.' is an online store for everyday essentials. Shop fashion, home, and accessories, then check out from your phone in a few taps.',
+                'Orders are packed and shipped across India. You can follow each order from your account, and support chat is available when you need a hand.',
+                'This is sample about copy. Replace it with your brand story before the store goes live.',
+            ],
+            'socials' => [
+                [
+                    'key' => 'instagram',
+                    'name' => 'Instagram',
+                    'handle' => '@'.$handle,
+                    'followers' => '128.4K',
+                    'href' => 'https://instagram.com/'.$handle,
+                ],
+                [
+                    'key' => 'facebook',
+                    'name' => 'Facebook',
+                    'handle' => '@'.$handle,
+                    'followers' => '86.2K',
+                    'href' => 'https://facebook.com/'.$handle,
+                ],
+                [
+                    'key' => 'telegram',
+                    'name' => 'Telegram',
+                    'handle' => '@'.$handle,
+                    'followers' => '42.8K',
+                    'href' => 'https://t.me/'.$handle,
+                ],
+                [
+                    'key' => 'whatsapp',
+                    'name' => 'WhatsApp',
+                    'handle' => '+91 98765 43210',
+                    'followers' => '19.6K',
+                    'href' => 'https://wa.me/919876543210',
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * @return list<array{id: string, title: string, body: string, href: string}>
      */
     public function policies(): array
     {
         return [
             [
                 'id' => 'terms',
-                'title' => 'Terms of use',
-                'body' => 'By using this store you agree to shop for personal use, provide accurate account details, and follow applicable laws. Prices, offers, and stock can change without notice. We may refuse or cancel orders in cases of pricing errors, suspected fraud, or supply limits.',
+                'title' => 'Terms and conditions',
+                'body' => 'By using this store you agree to shop for personal use, provide accurate account details, and follow applicable laws. Prices, offers, and stock can change without notice.',
+                'href' => '/terms-and-conditions',
             ],
             [
                 'id' => 'privacy',
                 'title' => 'Privacy policy',
-                'body' => 'We collect account, order, and device information needed to process purchases and improve the shopping experience. Payment details are handled by secure payment partners. We do not sell personal data. Contact support to request access or deletion where required by law.',
+                'body' => 'We collect account, order, and device information needed to process purchases. Payment details are handled by our payment gateway. We do not sell personal data.',
+                'href' => '/privacy-policy',
             ],
             [
-                'id' => 'returns',
-                'title' => 'Returns & refunds',
-                'body' => 'Eligible products can be returned within 7 days of delivery. Items must be unused with tags and packaging intact. Once the return is approved and picked up, refunds are issued to the original payment method within 5-7 business days.',
+                'id' => 'refund',
+                'title' => 'Refund policy',
+                'body' => 'Eligible products can be returned within 7 days of delivery. Approved refunds go back to the original payment method within 5-7 business days.',
+                'href' => '/refund-policy',
             ],
             [
                 'id' => 'shipping',
                 'title' => 'Shipping policy',
-                'body' => 'Orders usually ship within 24-48 hours. Metro delivery is typically 2-4 days; other regions may take 5-7 days. Delivery timelines are estimates and can vary during peak seasons or weather delays.',
+                'body' => 'Orders usually ship within 24-48 hours. Metro delivery is typically 2-4 days. Other regions may take 5-7 days.',
+                'href' => '/shipping-policy',
             ],
         ];
+    }
+
+    /**
+     * Full policy used by payment-gateway review.
+     *
+     * @return array{title: string, updatedAt: string, sections: list<array{heading: string, paragraphs: list<string>}>}
+     */
+    public function legal(string $key): array
+    {
+        $name = (string) config('app.name');
+
+        return match ($key) {
+            'privacy' => [
+                'title' => 'Privacy policy',
+                'updatedAt' => '1 October 2026',
+                'sections' => [
+                    [
+                        'heading' => 'Who we are',
+                        'paragraphs' => [
+                            $name.' ("we") operates this online store. This policy explains what information we collect when you browse, create an account, or pay for an order.',
+                        ],
+                    ],
+                    [
+                        'heading' => 'Information we collect',
+                        'paragraphs' => [
+                            'We collect your name, mobile number, email address, delivery addresses, and order history when you create an account or check out.',
+                            'We also store basic device and log data, such as browser type and pages visited, to keep the site reliable and to understand which products people view.',
+                        ],
+                    ],
+                    [
+                        'heading' => 'Payments',
+                        'paragraphs' => [
+                            'Card, UPI, and net-banking payments are processed by our payment gateway. We do not store your full card number, CVV, or UPI PIN on our servers.',
+                            'The gateway may collect payment details under its own privacy policy to authorize and settle the transaction.',
+                        ],
+                    ],
+                    [
+                        'heading' => 'How we use information',
+                        'paragraphs' => [
+                            'We use your information to create your account, deliver orders, send order updates, prevent fraud, and respond to support requests.',
+                            'We do not sell personal information. We share it only with delivery partners, the payment gateway, and authorities when the law requires it.',
+                        ],
+                    ],
+                    [
+                        'heading' => 'Your choices',
+                        'paragraphs' => [
+                            'You can update your profile and addresses from your account. Contact support to ask for a copy of your data or to request deletion where the law allows it.',
+                        ],
+                    ],
+                ],
+            ],
+            'terms' => [
+                'title' => 'Terms and conditions',
+                'updatedAt' => '1 October 2026',
+                'sections' => [
+                    [
+                        'heading' => 'Agreement',
+                        'paragraphs' => [
+                            'By using '.$name.' you agree to these terms. If you do not agree, please do not create an account or place an order.',
+                        ],
+                    ],
+                    [
+                        'heading' => 'Accounts and orders',
+                        'paragraphs' => [
+                            'You must provide a valid name, mobile number, and delivery address. You are responsible for keeping your login details private.',
+                            'An order is an offer to buy. We may accept, refuse, or cancel an order if an item is out of stock, the price was listed in error, or we suspect fraud.',
+                        ],
+                    ],
+                    [
+                        'heading' => 'Prices and payment',
+                        'paragraphs' => [
+                            'Prices are shown in Indian rupees and include applicable taxes unless the product page says otherwise. Offers can end without notice.',
+                            'Payment is collected through our payment gateway at checkout. The order is confirmed after the gateway reports a successful payment, or when you choose cash on delivery where that option is shown.',
+                        ],
+                    ],
+                    [
+                        'heading' => 'Use of the store',
+                        'paragraphs' => [
+                            'You may shop for personal use. You may not misuse the site, attempt to access another customer\'s account, or interfere with checkout.',
+                        ],
+                    ],
+                ],
+            ],
+            'shipping' => [
+                'title' => 'Shipping policy',
+                'updatedAt' => '1 October 2026',
+                'sections' => [
+                    [
+                        'heading' => 'Where we ship',
+                        'paragraphs' => [
+                            $name.' ships to serviceable pin codes across India. If we cannot deliver to your pin code, checkout will tell you before you pay.',
+                        ],
+                    ],
+                    [
+                        'heading' => 'Dispatch and delivery time',
+                        'paragraphs' => [
+                            'In-stock orders are usually handed to our delivery partner within 24-48 hours of payment confirmation.',
+                            'Metro cities are typically delivered in 2-4 business days. Other locations may take 5-7 business days. These times are estimates and can change during sales, weather, or courier delays.',
+                        ],
+                    ],
+                    [
+                        'heading' => 'Shipping charges',
+                        'paragraphs' => [
+                            'Any shipping fee is shown on the cart and checkout page before you pay. Free shipping, when offered, applies only to the orders described in that offer.',
+                        ],
+                    ],
+                    [
+                        'heading' => 'Tracking',
+                        'paragraphs' => [
+                            'After dispatch you can follow the order from Order history. We also send status updates to the mobile number or email on the order.',
+                        ],
+                    ],
+                ],
+            ],
+            'refund' => [
+                'title' => 'Refund policy',
+                'updatedAt' => '1 October 2026',
+                'sections' => [
+                    [
+                        'heading' => 'Cancellations',
+                        'paragraphs' => [
+                            'You can request cancellation from support before the order is dispatched. After dispatch, the order follows the return steps below instead of a cancellation.',
+                        ],
+                    ],
+                    [
+                        'heading' => 'Returns',
+                        'paragraphs' => [
+                            'Most items can be returned within 7 days of delivery if they are unused, with tags and original packaging. Perishable, personal-care, and made-to-order items may be marked non-returnable on the product page.',
+                            'If we delivered a damaged or wrong item, contact support with a photo and we will arrange a replacement or a refund.',
+                        ],
+                    ],
+                    [
+                        'heading' => 'Refund timeline',
+                        'paragraphs' => [
+                            'After the return is picked up and checked, we start the refund within 2 business days. Prepaid refunds go back to the original payment method through the payment gateway and usually appear in 5-7 business days.',
+                            'Cash on delivery refunds are sent to the bank account or UPI ID you share with support. We will email you when the refund is initiated.',
+                        ],
+                    ],
+                    [
+                        'heading' => 'Failed payments',
+                        'paragraphs' => [
+                            'If money is deducted but the order is not confirmed, the payment gateway usually reverses it automatically within 5-7 business days. Contact support with the payment reference if it does not return.',
+                        ],
+                    ],
+                ],
+            ],
+            default => throw new InvalidArgumentException('Unknown policy ['.$key.'].'),
+        };
     }
 
     private function currentUser(): ?User

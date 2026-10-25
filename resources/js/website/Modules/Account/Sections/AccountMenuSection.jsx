@@ -1,6 +1,8 @@
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 
 export default function AccountMenuSection({ menu = [] }) {
+    const { auth } = usePage().props;
+
     const logout = () => {
         router.post('/logout');
     };
@@ -22,9 +24,11 @@ export default function AccountMenuSection({ menu = [] }) {
                     </li>
                 ))}
             </ul>
-            <button type="button" className="account-menu__logout" onClick={logout}>
-                Log out
-            </button>
+            {auth?.user ? (
+                <button type="button" className="account-menu__logout" onClick={logout}>
+                    Log out
+                </button>
+            ) : null}
             <Link href="/account/faq" className="account-menu__help">
                 Need help? Chat with support
             </Link>

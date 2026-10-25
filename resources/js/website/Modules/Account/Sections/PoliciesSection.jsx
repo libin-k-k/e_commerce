@@ -1,3 +1,5 @@
+import { Link } from '@inertiajs/react';
+
 export default function PoliciesSection({ policies = [] }) {
     return (
         <section className="account-panel" aria-label="Terms and policies">
@@ -6,6 +8,11 @@ export default function PoliciesSection({ policies = [] }) {
                     <article key={policy.id} id={policy.id} className="account-policy">
                         <h2 className="account-policy__title">{policy.title}</h2>
                         <p className="account-policy__body">{policy.body}</p>
+                        {policy.href ? (
+                            <Link href={policy.href} className="account-policy__link">
+                                Read full policy
+                            </Link>
+                        ) : null}
                     </article>
                 ))}
             </div>

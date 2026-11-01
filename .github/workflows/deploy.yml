@@ -62,12 +62,13 @@ jobs:
             echo "Files changed on server:"
             git status
 
-            # Composer install
+            # Hostinger disables proc_open; skip Composer scripts (package:discover via Process fails)
             if [ -f composer.phar ]; then
-              php composer.phar install --no-interaction --prefer-dist --ignore-platform-req=ext-redis
+              php composer.phar install --no-interaction --prefer-dist --optimize-autoloader --no-scripts --ignore-platform-req=ext-redis
             else
-              composer install --no-interaction --prefer-dist --ignore-platform-req=ext-redis
+              composer install --no-interaction --prefer-dist --optimize-autoloader --no-scripts --ignore-platform-req=ext-redis
             fi
+            php artisan package:discover --ansi
 
             # Artisan commands
             php artisan migrate --force

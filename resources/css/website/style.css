@@ -304,9 +304,9 @@ button {
 
 .site-header__logo-img {
   display: block;
-  height: 34px;
+  height: 42px;
   width: auto;
-  max-width: min(150px, 46vw);
+  max-width: min(168px, 52vw);
   object-fit: contain;
 }
 

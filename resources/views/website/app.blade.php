@@ -5,6 +5,9 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
+        <link rel="icon" href="/favicon.ico" sizes="any" type="image/x-icon">
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
         @php
             $seo = $page['props']['seo'] ?? [];
             $seoKeywords = $seo['keywords'] ?? '';

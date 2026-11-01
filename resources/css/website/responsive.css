@@ -490,8 +490,8 @@
   }
 
   .site-header__logo-img {
-    height: 40px;
-    max-width: 180px;
+    height: 48px;
+    max-width: 200px;
   }
 
   .site-header__search-btn {
@@ -1846,8 +1846,8 @@
   }
 
   .site-header__logo-img {
-    height: 44px;
-    max-width: 200px;
+    height: 52px;
+    max-width: 220px;
   }
 
   .category-bar__links > li:nth-child(n + 6):not(:last-child) {

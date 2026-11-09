@@ -45,7 +45,7 @@ export default function OfferZoneSection({ offers = [], offerPage = null }) {
                         href={`/products?category=${offer.slug}`}
                         className={`offer-card is-tone-${offer.tone ?? 'all'}`}
                     >
-                        <span className="offer-card__badge">{offer.badge}</span>
+                        {offer.badge ? <span className="offer-card__badge">{offer.badge}</span> : null}
                         {offer.image ? (
                             <img
                                 className="offer-card__media"

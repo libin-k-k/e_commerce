@@ -62,7 +62,9 @@ class HomeProductFeedTest extends TestCase
             ->assertJsonPath('pagination.lastPage', 2)
             ->assertJsonPath('total', 14)
             ->assertJsonCount(12, 'products')
-            ->assertJsonPath('products.0.slug', 'feed-1');
+            ->assertJsonPath('products.0.slug', 'feed-1')
+            ->assertJsonPath('categoryTree.total', 14)
+            ->assertJsonCount(1, 'categoryTree.items');
 
         $this->assertNotContains('hidden-feed', collect($first->json('products'))->pluck('slug'));
         $this->assertTrue(collect(DB::getQueryLog())->contains(function (array $query): bool {

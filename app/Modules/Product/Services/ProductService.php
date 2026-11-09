@@ -158,6 +158,7 @@ class ProductService
                 'to' => $offset + count($products),
             ],
             'chips' => $this->categoryChips($category),
+            'categoryTree' => $this->categoryTree(),
             'filters' => [
                 'category' => $category?->slug,
                 'q' => $filters['q'],

@@ -1,1 +1,0 @@
-import{o as e,t}from"./app-B0HyY8M2.js";var n=t(),r=`/assets/website/logo.png?v=20261101`;function i({className:t=`brand-logo`,alt:i}){let{appName:a}=e().props;return(0,n.jsx)(`img`,{className:t,src:r,alt:i??a,width:196,height:93,decoding:`async`})}export{i as t};

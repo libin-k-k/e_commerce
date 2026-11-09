@@ -1,6 +1,10 @@
 import { Link } from '@inertiajs/react';
 
 export default function CategoryScrollSection({ items = [] }) {
+    if (items.length === 0) {
+        return null;
+    }
+
     return (
         <section className="section section--tight category-strip" aria-label="Quick categories">
             <div className="category-scroll">

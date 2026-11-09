@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import ProductCard from '../../../Shared/Components/ProductCard';
 import ListingFilterBar from '../../Product/Components/ListingFilterBar';
 import ListingFilterSheet from '../../Product/Components/ListingFilterSheet';
+import ListingSidebar from '../../Product/Components/ListingSidebar';
 
 const INITIAL_FILTERS = {
     category: null,
@@ -15,6 +16,8 @@ const INITIAL_FILTERS = {
     rating: null,
 };
 
+const EMPTY_TREE = { total: 0, items: [] };
+
 export default function HomeProductFeed({ url }) {
     const titleId = useId();
     const sectionRef = useRef(null);
@@ -25,6 +28,7 @@ export default function HomeProductFeed({ url }) {
     const [filters, setFilters] = useState(INITIAL_FILTERS);
     const [products, setProducts] = useState([]);
     const [filterOptions, setFilterOptions] = useState({});
+    const [categoryTree, setCategoryTree] = useState(EMPTY_TREE);
     const [page, setPage] = useState(0);
     const [lastPage, setLastPage] = useState(1);
     const [total, setTotal] = useState(null);
@@ -91,6 +95,7 @@ export default function HomeProductFeed({ url }) {
                 setLastPage(data.pagination?.lastPage ?? 1);
                 setTotal(data.total ?? 0);
                 setFilterOptions(data.filterOptions ?? {});
+                setCategoryTree(data.categoryTree ?? EMPTY_TREE);
                 setLoading(false);
             })
             .catch((error) => {
@@ -173,7 +178,16 @@ export default function HomeProductFeed({ url }) {
     }, [visible, url, loading, failed, page, lastPage, filters]);
 
     const applyFilters = (patch) => {
-        setFilters((current) => ({ ...current, ...patch }));
+        setFilters((current) => {
+            const next = { ...current, ...patch };
+
+            if (patch.price) {
+                next.min_price = null;
+                next.max_price = null;
+            }
+
+            return next;
+        });
         setSheetPanel(null);
     };
 
@@ -181,59 +195,109 @@ export default function HomeProductFeed({ url }) {
         setFilters(INITIAL_FILTERS);
     };
 
+    const selectCategory = (slug) => applyFilters({ category: slug, size: null, color: null });
+
     const hasPriceFilter = filters.price != null || filters.min_price != null || filters.max_price != null;
     const activeCount = [hasPriceFilter, filters.rating != null, filters.size != null, filters.color != null].filter(Boolean).length;
     const loaded = page > 0 && !failed;
+    const sorts = filterOptions.sorts ?? [];
 
     return (
         <section ref={sectionRef} className="home-feed" aria-labelledby={titleId}>
             <div className="home-feed__head">
-                <h2 id={titleId} className="home-feed__title">All products</h2>
-                {total != null ? (
-                    <p className="home-feed__count">{total === 1 ? '1 product' : `${total} products`}</p>
+                <div className="home-feed__heading">
+                    <h2 id={titleId} className="home-feed__title">
+                        All products
+                    </h2>
+                    {total != null ? (
+                        <p className="home-feed__count">{total === 1 ? '1 product' : `${total} products`}</p>
+                    ) : null}
+                </div>
+
+                {loaded && sorts.length > 0 ? (
+                    <div className="home-feed__tools">
+                        <label className="listing-toolbar__sort">
+                            <span className="listing-toolbar__sort-label">Sort by</span>
+                            <select
+                                className="listing-toolbar__select"
+                                value={filters.sort ?? 'popular'}
+                                onChange={(event) => applyFilters({ sort: event.target.value })}
+                            >
+                                {sorts.map((option) => (
+                                    <option key={option.value} value={option.value}>
+                                        {option.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+                    </div>
                 ) : null}
             </div>
 
-            {loaded ? (
-                <ListingFilterBar
-                    filters={filters}
-                    activeCount={activeCount}
-                    hasSizes={(filterOptions.sizes ?? []).length > 0}
-                    onOpen={setSheetPanel}
-                />
-            ) : null}
+            <div className="home-feed__layout">
+                {loaded ? (
+                    <ListingSidebar
+                        tree={categoryTree}
+                        filters={filters}
+                        options={filterOptions}
+                        activeCount={activeCount}
+                        onApply={applyFilters}
+                        onCategory={selectCategory}
+                        onClear={clearFilters}
+                    />
+                ) : null}
 
-            {products.length > 0 ? (
-                <div className="product-grid product-grid--listing">
-                    {products.map((product) => (
-                        <ProductCard key={product.slug} product={product} titleAs="h3" />
-                    ))}
+                <div className="home-feed__main">
+                    {loaded ? (
+                        <ListingFilterBar
+                            filters={filters}
+                            activeCount={activeCount}
+                            hasSizes={(filterOptions.sizes ?? []).length > 0}
+                            onOpen={setSheetPanel}
+                        />
+                    ) : null}
+
+                    {products.length > 0 ? (
+                        <div className="product-grid product-grid--listing">
+                            {products.map((product) => (
+                                <ProductCard key={product.slug} product={product} titleAs="h3" />
+                            ))}
+                        </div>
+                    ) : null}
+
+                    {loaded && products.length === 0 ? (
+                        <div className="listing__empty">
+                            <p className="listing__empty-title">No products found</p>
+                            <p className="listing__empty-text">Clear your filters and try again.</p>
+                            <button type="button" className="btn btn--outline" onClick={clearFilters}>
+                                Clear filters
+                            </button>
+                        </div>
+                    ) : null}
+
+                    {loading ? (
+                        <p className="home-feed__status">
+                            {products.length > 0 ? 'Loading more products…' : 'Loading products…'}
+                        </p>
+                    ) : null}
+
+                    {failed ? (
+                        <div className="listing__empty">
+                            <p className="listing__empty-title">Couldn't load products</p>
+                            <p className="listing__empty-text">Check your connection and try again.</p>
+                            <button
+                                type="button"
+                                className="btn btn--outline"
+                                onClick={() => setAttempt((current) => current + 1)}
+                            >
+                                Try again
+                            </button>
+                        </div>
+                    ) : null}
+
+                    <div ref={endRef} className="home-feed__end" />
                 </div>
-            ) : null}
-
-            {loaded && products.length === 0 ? (
-                <div className="listing__empty">
-                    <p className="listing__empty-title">No products found</p>
-                    <p className="listing__empty-text">Clear your filters and try again.</p>
-                    <button type="button" className="btn btn--outline" onClick={clearFilters}>
-                        Clear filters
-                    </button>
-                </div>
-            ) : null}
-
-            {loading ? <p className="home-feed__status">{products.length > 0 ? 'Loading more products…' : 'Loading products…'}</p> : null}
-
-            {failed ? (
-                <div className="listing__empty">
-                    <p className="listing__empty-title">Couldn't load products</p>
-                    <p className="listing__empty-text">Check your connection and try again.</p>
-                    <button type="button" className="btn btn--outline" onClick={() => setAttempt((current) => current + 1)}>
-                        Try again
-                    </button>
-                </div>
-            ) : null}
-
-            <div ref={endRef} className="home-feed__end" />
+            </div>
 
             <ListingFilterSheet
                 panel={sheetPanel}

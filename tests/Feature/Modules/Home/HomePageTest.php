@@ -26,14 +26,61 @@ class HomePageTest extends TestCase
             ->has('seo.title')
             ->has('seo.description')
             ->has('seo.keywords')
-            ->has('quickCategories')
-            ->has('offers')
+            ->has('quickCategories', 0)
+            ->has('offers', 0)
+            ->has('categoryMenu', 0)
             ->has('categoryShowcases')
             ->has('heroBanners')
             ->has('landscapeBanners')
             ->has('footerBanners')
             ->where('appName', config('app.name'))
         );
+    }
+
+    public function test_home_page_loads_quick_categories_and_offers_from_database(): void
+    {
+        $fashion = Category::factory()->create([
+            'name' => 'Fashion',
+            'slug' => 'fashion',
+            'sort_order' => 1,
+            'image_path' => 'assets/website/category/western_wear.png',
+        ]);
+        Category::factory()->create([
+            'name' => 'Beauty',
+            'slug' => 'beauty',
+            'sort_order' => 2,
+            'image_path' => 'assets/website/category/beauty.png',
+        ]);
+        Category::factory()->inactive()->create([
+            'name' => 'Hidden',
+            'slug' => 'hidden',
+            'sort_order' => 0,
+        ]);
+        Category::factory()->childOf($fashion)->create([
+            'name' => 'Dresses',
+            'slug' => 'dresses',
+            'sort_order' => 1,
+        ]);
+
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('quickCategories', 2)
+                ->where('quickCategories.0.name', 'Fashion')
+                ->where('quickCategories.0.slug', 'fashion')
+                ->where('quickCategories.0.href', '/products?category=fashion')
+                ->where('quickCategories.0.tone', 'fashion')
+                ->where('quickCategories.1.slug', 'beauty')
+                ->where('quickCategories', fn ($categories): bool => collect($categories)->pluck('slug')->all() === ['fashion', 'beauty'])
+                ->has('offers', 2)
+                ->where('offers.0.slug', 'fashion')
+                ->where('offers.0.badge', null)
+                ->where('offers.1.slug', 'beauty')
+                ->has('categoryMenu', 2)
+                ->where('categoryMenu.0.name', 'Fashion')
+                ->has('categoryMenu.0.children', 1)
+                ->where('categoryMenu.1.name', 'Beauty')
+            );
     }
 
     public function test_home_page_shows_four_products_for_the_first_three_categories(): void

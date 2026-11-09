@@ -4,43 +4,41 @@ export default function ListingFilterBar({ filters, activeCount, hasSizes, onOpe
 
     return (
         <div className="listing-filters" role="toolbar" aria-label="Filter and sort products">
-            <div className="listing-filters__scroll">
+            <button
+                type="button"
+                className={`listing-filter${activeCount > 0 ? ' is-active' : ''}`}
+                onClick={() => onOpen('all')}
+            >
+                <FiltersIcon />
+                Filters
+                {activeCount > 0 ? <span className="listing-filter__count">{activeCount}</span> : null}
+            </button>
+            <button
+                type="button"
+                className={`listing-filter${hasPrice ? ' is-active' : ''}`}
+                onClick={() => onOpen('price')}
+            >
+                Price
+                <ChevronDownIcon />
+            </button>
+            <button
+                type="button"
+                className={`listing-filter${filters.rating ? ' is-active' : ''}`}
+                onClick={() => onOpen('rating')}
+            >
+                Rating
+                <ChevronDownIcon />
+            </button>
+            {hasSizes ? (
                 <button
                     type="button"
-                    className={`listing-filter${activeCount > 0 ? ' is-active' : ''}`}
-                    onClick={() => onOpen('all')}
+                    className={`listing-filter${filters.size ? ' is-active' : ''}`}
+                    onClick={() => onOpen('size')}
                 >
-                    <FiltersIcon />
-                    Filters
-                    {activeCount > 0 ? <span className="listing-filter__count">{activeCount}</span> : null}
-                </button>
-                <button
-                    type="button"
-                    className={`listing-filter${hasPrice ? ' is-active' : ''}`}
-                    onClick={() => onOpen('price')}
-                >
-                    Price
+                    Size
                     <ChevronDownIcon />
                 </button>
-                <button
-                    type="button"
-                    className={`listing-filter${filters.rating ? ' is-active' : ''}`}
-                    onClick={() => onOpen('rating')}
-                >
-                    Rating
-                    <ChevronDownIcon />
-                </button>
-                {hasSizes ? (
-                    <button
-                        type="button"
-                        className={`listing-filter${filters.size ? ' is-active' : ''}`}
-                        onClick={() => onOpen('size')}
-                    >
-                        Size
-                        <ChevronDownIcon />
-                    </button>
-                ) : null}
-            </div>
+            ) : null}
             <button
                 type="button"
                 className={`listing-filter listing-filter--sort${sorted ? ' is-active' : ''}`}

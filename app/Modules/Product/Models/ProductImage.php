@@ -10,6 +10,7 @@ class ProductImage extends Model
 {
     protected $fillable = [
         'product_id',
+        'product_color_id',
         'path',
         'sort_order',
     ];
@@ -21,6 +22,7 @@ class ProductImage extends Model
     {
         return [
             'product_id' => 'integer',
+            'product_color_id' => 'integer',
             'sort_order' => 'integer',
         ];
     }
@@ -28,6 +30,11 @@ class ProductImage extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function color(): BelongsTo
+    {
+        return $this->belongsTo(ProductColor::class, 'product_color_id');
     }
 
     public function url(): ?string

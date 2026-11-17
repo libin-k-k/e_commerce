@@ -50,6 +50,7 @@ export default function ProductForm({
                 : {}),
             main_image: null,
             additional_images: [],
+            color_images: {},
             remove_image_ids: [],
             sizes: JSON.stringify((product?.sizes ?? []).map((item) => item.name ?? item)),
             colors: JSON.stringify(
@@ -85,6 +86,7 @@ export default function ProductForm({
     );
     const [existingImages, setExistingImages] = useState(product?.images ?? []);
     const [removeImageIds, setRemoveImageIds] = useState([]);
+    const [colorImageFiles, setColorImageFiles] = useState({});
     const [previewOpen, setPreviewOpen] = useState(false);
     const [mainPreviewUrl, setMainPreviewUrl] = useState(product?.main_image_url ?? null);
     const [sizeDraft, setSizeDraft] = useState('');
@@ -109,9 +111,22 @@ export default function ProductForm({
             hex: item.hex || '#000000',
         }))
         .filter((item) => item.name !== '');
+    const cleanColorNames = cleanColors.map((item) => item.name);
+    const sharedExistingImages = existingImages.filter((image) => !image.color);
+    const colorExistingImages = useMemo(() => {
+        const grouped = {};
+        existingImages.forEach((image) => {
+            if (!image.color) {
+                return;
+            }
+            grouped[image.color] ??= [];
+            grouped[image.color].push(image);
+        });
+        return grouped;
+    }, [existingImages]);
 
     useEffect(() => {
-        const nextCombos = buildCombinations(cleanSizes, cleanColors.map((item) => item.name));
+        const nextCombos = buildCombinations(cleanSizes, cleanColorNames);
         setVariants((current) =>
             nextCombos.map((combo) => {
                 const existing = current.find(
@@ -145,13 +160,33 @@ export default function ProductForm({
         );
         // Rebuild matrix when option axes change; base price/sku only seed new rows.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [cleanSizes.join('|'), cleanColors.map((item) => item.name).join('|')]);
+    }, [cleanSizes.join('|'), cleanColorNames.join('|')]);
+
+    useEffect(() => {
+        setColorImageFiles((current) => {
+            const next = {};
+            cleanColorNames.forEach((name) => {
+                if (current[name]?.length) {
+                    next[name] = current[name];
+                }
+            });
+            return next;
+        });
+    }, [cleanColorNames.join('|')]);
 
     const variantStockTotal = variants.reduce((sum, row) => sum + Number(row.stock || 0), 0);
     const hasVariantMatrix = cleanSizes.length > 0 || cleanColors.length > 0;
 
     const onSubmit = (event) => {
         event.preventDefault();
+
+        const nextColorImages = {};
+        cleanColorNames.forEach((name) => {
+            const files = colorImageFiles[name] ?? [];
+            if (files.length > 0) {
+                nextColorImages[name] = files;
+            }
+        });
 
         transform((form) => ({
             ...form,
@@ -178,6 +213,7 @@ export default function ProductForm({
                     .filter((row) => row.min_quantity >= 2 && row.value !== null && row.value > 0),
             ),
             remove_image_ids: JSON.stringify(removeImageIds),
+            color_images: nextColorImages,
             subcategory_id:
                 form.subcategory_id === '' || form.subcategory_id === null
                     ? null
@@ -238,6 +274,34 @@ export default function ProductForm({
     const removeExistingImage = (id) => {
         setRemoveImageIds((current) => [...current, id]);
         setExistingImages((current) => current.filter((image) => image.id !== id));
+    };
+
+    const setColorFiles = (colorName, files) => {
+        setColorImageFiles((current) => ({
+            ...current,
+            [colorName]: files,
+        }));
+    };
+
+    const removeColor = (colorName) => {
+        const removedIds = existingImages
+            .filter((image) => image.color === colorName)
+            .map((image) => image.id);
+
+        if (removedIds.length > 0) {
+            setRemoveImageIds((current) => [...current, ...removedIds]);
+            setExistingImages((current) =>
+                current.filter((image) => !removedIds.includes(image.id)),
+            );
+        }
+
+        setColorImageFiles((current) => {
+            const next = { ...current };
+            delete next[colorName];
+            return next;
+        });
+
+        setColors(colors.filter((item) => String(item.name).trim() !== colorName));
     };
 
     const addSize = () => {
@@ -455,10 +519,13 @@ export default function ProductForm({
             />
 
             <fieldset className="banner-form__fieldset">
-                <legend className="banner-form__legend">Additional images</legend>
-                {existingImages.length > 0 ? (
+                <legend className="banner-form__legend">Shared gallery images</legend>
+                <p className="product-form__hint">
+                    Shown for every color when a color has no dedicated photos, and after color photos.
+                </p>
+                {sharedExistingImages.length > 0 ? (
                     <div className="product-form__thumbs">
-                        {existingImages.map((image) => (
+                        {sharedExistingImages.map((image) => (
                             <div key={image.id} className="product-form__thumb">
                                 <img src={image.url} alt="" />
                                 <button
@@ -549,13 +616,7 @@ export default function ProductForm({
                                     type="button"
                                     className="product-options__chip-remove"
                                     aria-label={`Remove color ${color.name}`}
-                                    onClick={() =>
-                                        setColors(
-                                            colors.filter(
-                                                (item) => String(item.name).trim() !== color.name,
-                                            ),
-                                        )
-                                    }
+                                    onClick={() => removeColor(color.name)}
                                 >
                                     ×
                                 </button>
@@ -595,6 +656,74 @@ export default function ProductForm({
                     </button>
                 </div>
             </fieldset>
+
+            {cleanColors.length > 0 ? (
+                <fieldset className="banner-form__fieldset">
+                    <legend className="banner-form__legend">Color images</legend>
+                    <p className="product-form__hint">
+                        Upload photos for each color. The storefront gallery switches when shoppers pick a color.
+                    </p>
+                    <div className="product-form__color-images">
+                        {cleanColors.map((color) => {
+                            const existing = colorExistingImages[color.name] ?? [];
+                            const pendingCount = (colorImageFiles[color.name] ?? []).length;
+
+                            return (
+                                <div key={color.name} className="product-form__color-image-row">
+                                    <div className="product-form__color-image-heading">
+                                        <svg
+                                            className="product-options__swatch"
+                                            viewBox="0 0 16 16"
+                                            aria-hidden="true"
+                                        >
+                                            <rect width="16" height="16" rx="4" fill={color.hex || '#111827'} />
+                                        </svg>
+                                        <span>{color.name}</span>
+                                        {pendingCount > 0 ? (
+                                            <span className="product-form__hint">
+                                                {pendingCount} new file{pendingCount === 1 ? '' : 's'} selected
+                                            </span>
+                                        ) : null}
+                                    </div>
+                                    {existing.length > 0 ? (
+                                        <div className="product-form__thumbs">
+                                            {existing.map((image) => (
+                                                <div key={image.id} className="product-form__thumb">
+                                                    <img src={image.url} alt="" />
+                                                    <button
+                                                        type="button"
+                                                        className="admin-table__link is-danger"
+                                                        onClick={() => removeExistingImage(image.id)}
+                                                    >
+                                                        Remove
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="product-options__empty">No images for this color yet.</p>
+                                    )}
+                                    <input
+                                        className="banner-form__input banner-form__file"
+                                        type="file"
+                                        accept="image/*"
+                                        multiple
+                                        onChange={(event) =>
+                                            setColorFiles(
+                                                color.name,
+                                                Array.from(event.target.files ?? []),
+                                            )
+                                        }
+                                    />
+                                </div>
+                            );
+                        })}
+                    </div>
+                    {errors.color_images ? (
+                        <span className="banner-form__error">{errors.color_images}</span>
+                    ) : null}
+                </fieldset>
+            ) : null}
 
             <fieldset className="banner-form__fieldset">
                 <legend className="banner-form__legend">Quantity offers</legend>

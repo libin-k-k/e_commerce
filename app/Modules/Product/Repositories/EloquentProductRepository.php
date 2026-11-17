@@ -395,7 +395,7 @@ class EloquentProductRepository implements ProductRepositoryInterface
             ->with([
                 'category',
                 'subcategory',
-                'images',
+                'images.color',
                 'sizes',
                 'colors',
                 'variants.size',

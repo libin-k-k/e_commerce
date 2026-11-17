@@ -175,11 +175,13 @@ class Product extends Model
             'main_image_url' => $this->mainImageUrl(),
             'is_unlaunched' => $this->is_unlaunched,
             'sort_order' => $this->sort_order,
-            'images' => $this->images->map(fn (ProductImage $image): array => [
+            'images' => $this->images->loadMissing('color')->map(fn (ProductImage $image): array => [
                 'id' => $image->id,
                 'path' => $image->path,
                 'url' => $image->url(),
                 'sort_order' => $image->sort_order,
+                'color' => $image->color?->name,
+                'color_id' => $image->product_color_id,
             ])->values()->all(),
             'sizes' => $sizes->map(fn (ProductSize $size): array => [
                 'id' => $size->id,
@@ -221,8 +223,32 @@ class Product extends Model
         $compareAt = $this->displayCompareAtPrice();
         $stock = $this->availableStock();
 
-        $images = $this->images->map(fn (ProductImage $image): string => (string) $image->url())->filter()->values()->all();
+        $galleryImages = $this->images->loadMissing('color');
+        $sharedImageUrls = $galleryImages
+            ->filter(fn (ProductImage $image): bool => $image->product_color_id === null)
+            ->map(fn (ProductImage $image): string => (string) $image->url())
+            ->filter()
+            ->values()
+            ->all();
+
+        $imagesByColor = [];
+        foreach ($galleryImages as $image) {
+            $colorName = $image->color?->name;
+            $url = $image->url();
+            if ($colorName === null || $colorName === '' || $url === null || $url === '') {
+                continue;
+            }
+
+            $imagesByColor[$colorName] ??= [];
+            $imagesByColor[$colorName][] = $url;
+        }
+
         $main = $this->mainImageUrl();
+        $images = $galleryImages
+            ->map(fn (ProductImage $image): string => (string) $image->url())
+            ->filter()
+            ->values()
+            ->all();
 
         if ($main !== null && ! in_array($main, $images, true)) {
             array_unshift($images, $main);
@@ -230,6 +256,14 @@ class Product extends Model
 
         if ($images === [] && $main !== null) {
             $images = [$main];
+        }
+
+        if ($main !== null && ! in_array($main, $sharedImageUrls, true)) {
+            array_unshift($sharedImageUrls, $main);
+        }
+
+        if ($sharedImageUrls === [] && $main !== null && $imagesByColor === []) {
+            $sharedImageUrls = [$main];
         }
 
         $badge = null;
@@ -297,6 +331,8 @@ class Product extends Model
                 ->all(),
             'image' => $images[0] ?? $main,
             'images' => $images,
+            'sharedImages' => $sharedImageUrls,
+            'imagesByColor' => $imagesByColor,
             'category' => $this->category?->slug,
             'subcategory' => $this->subcategory?->slug,
             'meta_title' => $this->name,

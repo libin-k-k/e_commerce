@@ -73,7 +73,7 @@ class ProductAdminRepository implements ProductAdminRepositoryInterface
         return [
             'category',
             'subcategory',
-            'images',
+            'images.color',
             'sizes',
             'colors',
             'variants.size',

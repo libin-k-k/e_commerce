@@ -47,6 +47,29 @@ export default function Show({ seo, product, related = [], deliveryAddress = nul
             ? selectedVariant.price
             : null
         : (product.compareAtValue ?? null);
+
+    const galleryImages = useMemo(() => {
+        const shared = product.sharedImages ?? [];
+        const byColor = product.imagesByColor ?? {};
+        const colorImages =
+            selectedColor && Array.isArray(byColor[selectedColor]) ? byColor[selectedColor] : [];
+
+        if (colorImages.length > 0) {
+            const merged = [...colorImages];
+            shared.forEach((url) => {
+                if (!merged.includes(url)) {
+                    merged.push(url);
+                }
+            });
+            return merged;
+        }
+
+        if (shared.length > 0) {
+            return shared;
+        }
+
+        return product.images ?? [];
+    }, [product.sharedImages, product.imagesByColor, product.images, selectedColor]);
     const discountPercent = compareAt !== null && compareAt > price ? Math.round((1 - price / compareAt) * 100) : 0;
     const badge =
         discountPercent > 0
@@ -128,7 +151,7 @@ export default function Show({ seo, product, related = [], deliveryAddress = nul
 
                 <div className="pdp__layout">
                     <ProductGallerySection
-                        images={product.images}
+                        images={galleryImages}
                         name={product.name}
                         badge={badge}
                         wished={wished}

@@ -6470,6 +6470,29 @@ body.admin-nav-locked {
   gap: 10px;
 }
 
+.product-form__color-images {
+  display: grid;
+  gap: 16px;
+}
+
+.product-form__color-image-row {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-bg) 70%, var(--color-card));
+}
+
+.product-form__color-image-heading {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
 .product-form__thumb {
   display: grid;
   gap: 6px;

@@ -38,9 +38,10 @@ class ProductController extends Controller
     public function store(StoreProductRequest $request): RedirectResponse
     {
         $this->productAdminService->create(
-            $request->safe()->except(['main_image', 'additional_images', 'remove_image_ids']),
+            $request->safe()->except(['main_image', 'additional_images', 'remove_image_ids', 'color_images']),
             $request->file('main_image'),
             $this->uploadedFiles($request->file('additional_images')),
+            $this->uploadedColorFiles($request->file('color_images')),
         );
 
         return redirect()
@@ -70,10 +71,11 @@ class ProductController extends Controller
 
         $this->productAdminService->update(
             $model,
-            $request->safe()->except(['main_image', 'additional_images', 'remove_image_ids']),
+            $request->safe()->except(['main_image', 'additional_images', 'remove_image_ids', 'color_images']),
             $request->file('main_image'),
             $this->uploadedFiles($request->file('additional_images')),
             array_map('intval', $removeIds),
+            $this->uploadedColorFiles($request->file('color_images')),
         );
 
         return redirect()
@@ -108,5 +110,33 @@ class ProductController extends Controller
             $files,
             fn ($file): bool => $file instanceof UploadedFile,
         ));
+    }
+
+    /**
+     * @return array<string, list<UploadedFile>>
+     */
+    private function uploadedColorFiles(mixed $files): array
+    {
+        if (! is_array($files)) {
+            return [];
+        }
+
+        $grouped = [];
+
+        foreach ($files as $colorName => $colorFiles) {
+            $name = trim((string) $colorName);
+            if ($name === '') {
+                continue;
+            }
+
+            $uploaded = $this->uploadedFiles($colorFiles);
+            if ($uploaded === []) {
+                continue;
+            }
+
+            $grouped[$name] = $uploaded;
+        }
+
+        return $grouped;
     }
 }

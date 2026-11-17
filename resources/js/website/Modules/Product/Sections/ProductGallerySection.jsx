@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const SWIPE_DISTANCE = 40;
 
@@ -6,6 +6,11 @@ export default function ProductGallerySection({ images = [], name = '', badge = 
     const [active, setActive] = useState(0);
     const touchStartX = useRef(null);
     const count = images.length;
+    const imagesKey = images.join('|');
+
+    useEffect(() => {
+        setActive(0);
+    }, [imagesKey]);
 
     if (count === 0) {
         return null;
@@ -77,7 +82,7 @@ export default function ProductGallerySection({ images = [], name = '', badge = 
             {count > 1 ? (
                 <ul className="pdp-gallery__thumbs">
                     {images.map((src, thumbIndex) => (
-                        <li key={src}>
+                        <li key={`${thumbIndex}-${src}`}>
                             <button
                                 type="button"
                                 className={`pdp-gallery__thumb${thumbIndex === index ? ' is-active' : ''}`}

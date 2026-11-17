@@ -50,10 +50,15 @@ class ProductAdminService
     /**
      * @param  array<string, mixed>  $data
      * @param  list<UploadedFile>|null  $additionalImages
+     * @param  array<string, list<UploadedFile>>|null  $colorImages
      */
-    public function create(array $data, ?UploadedFile $mainImage = null, ?array $additionalImages = null): Product
-    {
-        return DB::transaction(function () use ($data, $mainImage, $additionalImages): Product {
+    public function create(
+        array $data,
+        ?UploadedFile $mainImage = null,
+        ?array $additionalImages = null,
+        ?array $colorImages = null,
+    ): Product {
+        return DB::transaction(function () use ($data, $mainImage, $additionalImages, $colorImages): Product {
             $payload = $this->normalize($data);
 
             if ($mainImage !== null) {
@@ -61,9 +66,10 @@ class ProductAdminService
             }
 
             $product = $this->products->create($payload);
-            $this->syncOptionsAndVariants($product, $data, $payload);
+            $colorMap = $this->syncOptionsAndVariants($product, $data, $payload);
             $this->syncQuantityDiscounts($product, $data);
             $this->storeAdditionalImages($product, $additionalImages ?? []);
+            $this->storeColorImages($product, $colorMap, $colorImages ?? []);
 
             return $this->findOrFail($product->id);
         });
@@ -73,6 +79,7 @@ class ProductAdminService
      * @param  array<string, mixed>  $data
      * @param  list<UploadedFile>|null  $additionalImages
      * @param  list<int>|null  $removeImageIds
+     * @param  array<string, list<UploadedFile>>|null  $colorImages
      */
     public function update(
         Product $product,
@@ -80,8 +87,9 @@ class ProductAdminService
         ?UploadedFile $mainImage = null,
         ?array $additionalImages = null,
         ?array $removeImageIds = null,
+        ?array $colorImages = null,
     ): Product {
-        return DB::transaction(function () use ($product, $data, $mainImage, $additionalImages, $removeImageIds): Product {
+        return DB::transaction(function () use ($product, $data, $mainImage, $additionalImages, $removeImageIds, $colorImages): Product {
             $payload = $this->normalize($data, $product->id);
 
             if ($mainImage !== null) {
@@ -91,9 +99,10 @@ class ProductAdminService
 
             $this->products->update($product, $payload);
             $this->removeImages($product, $removeImageIds ?? []);
-            $this->syncOptionsAndVariants($product->fresh(), $data, $payload);
+            $colorMap = $this->syncOptionsAndVariants($product->fresh(), $data, $payload);
             $this->syncQuantityDiscounts($product->fresh(), $data);
             $this->storeAdditionalImages($product->fresh(), $additionalImages ?? []);
+            $this->storeColorImages($product->fresh(), $colorMap, $colorImages ?? []);
 
             return $this->findOrFail($product->id);
         });
@@ -218,9 +227,18 @@ class ProductAdminService
     /**
      * @param  array<string, mixed>  $data
      * @param  array<string, mixed>  $basePayload
+     * @return array<string, ProductColor>
      */
-    private function syncOptionsAndVariants(Product $product, array $data, array $basePayload): void
+    private function syncOptionsAndVariants(Product $product, array $data, array $basePayload): array
     {
+        $imageColorNames = $product->images()
+            ->with('color')
+            ->get()
+            ->mapWithKeys(fn ($image): array => [
+                (int) $image->id => $image->color?->name,
+            ])
+            ->all();
+
         $product->variants()->delete();
         $product->sizes()->delete();
         $product->colors()->delete();
@@ -249,11 +267,13 @@ class ProductAdminService
             $colorMap[$color['name']] = $row;
         }
 
+        $this->remapImageColors($product, $imageColorNames, $colorMap);
+
         $hasOptions = $sizeMap !== [] || $colorMap !== [];
         if (! $hasOptions) {
             $product->update(['stock' => (int) $basePayload['stock']]);
 
-            return;
+            return $colorMap;
         }
 
         $rows = $this->normalizeVariantRows(
@@ -324,6 +344,36 @@ class ProductAdminService
         }
 
         $product->update(['stock' => $totalStock]);
+
+        return $colorMap;
+    }
+
+    /**
+     * Re-link gallery images after colors are recreated by matching saved color names.
+     *
+     * @param  array<int, ?string>  $imageColorNames
+     * @param  array<string, ProductColor>  $colorMap
+     */
+    private function remapImageColors(Product $product, array $imageColorNames, array $colorMap): void
+    {
+        if ($imageColorNames === []) {
+            return;
+        }
+
+        $images = $product->images()->whereIn('id', array_keys($imageColorNames))->get();
+
+        foreach ($images as $image) {
+            $colorName = $imageColorNames[(int) $image->id] ?? null;
+            $colorId = ($colorName !== null && isset($colorMap[$colorName]))
+                ? $colorMap[$colorName]->id
+                : null;
+
+            if ((int) ($image->product_color_id ?? 0) === (int) ($colorId ?? 0)) {
+                continue;
+            }
+
+            $image->update(['product_color_id' => $colorId]);
+        }
     }
 
     /**
@@ -570,9 +620,44 @@ class ProductAdminService
             $sort++;
             $path = $this->webpImageConverter->store($file, 'products/gallery', 1200);
             $product->images()->create([
+                'product_color_id' => null,
                 'path' => $path,
                 'sort_order' => $sort,
             ]);
+        }
+    }
+
+    /**
+     * @param  array<string, ProductColor>  $colorMap
+     * @param  array<string, list<UploadedFile>>  $colorImages
+     */
+    private function storeColorImages(Product $product, array $colorMap, array $colorImages): void
+    {
+        if ($colorImages === [] || $colorMap === []) {
+            return;
+        }
+
+        $sort = (int) $product->images()->max('sort_order');
+
+        foreach ($colorImages as $colorName => $files) {
+            $color = $colorMap[$colorName] ?? null;
+            if ($color === null || ! is_array($files)) {
+                continue;
+            }
+
+            foreach ($files as $file) {
+                if (! $file instanceof UploadedFile) {
+                    continue;
+                }
+
+                $sort++;
+                $path = $this->webpImageConverter->store($file, 'products/gallery', 1200);
+                $product->images()->create([
+                    'product_color_id' => $color->id,
+                    'path' => $path,
+                    'sort_order' => $sort,
+                ]);
+            }
         }
     }
 

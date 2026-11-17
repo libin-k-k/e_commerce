@@ -90,6 +90,70 @@ class ProductAdminTest extends TestCase
         $this->assertStringContainsString('<strong>audio</strong>', (string) $product->description);
     }
 
+    public function test_admin_can_upload_color_specific_images(): void
+    {
+        Storage::fake('public');
+        $admin = User::factory()->admin()->create();
+        $category = Category::factory()->create();
+
+        $this->actingAs($admin)
+            ->post(route('admin.products.store'), [
+                'name' => 'Color Tee',
+                'slug' => 'color-tee',
+                'sku' => 'SKU-COLOR-TEE',
+                'short_description' => 'Soft cotton tee',
+                'description' => '<p>Comfort fit</p>',
+                'price' => 40,
+                'sale_price' => null,
+                'stock' => 0,
+                'rating' => 4,
+                'category_id' => $category->id,
+                'is_unlaunched' => false,
+                'sort_order' => 1,
+                'sizes' => json_encode(['M']),
+                'colors' => json_encode([
+                    ['name' => 'Black', 'hex' => '#111111'],
+                    ['name' => 'Red', 'hex' => '#ef4444'],
+                ]),
+                'variants' => json_encode([
+                    ['size' => 'M', 'color' => 'Black', 'sku' => 'SKU-COLOR-TEE-M-BLACK', 'price' => 40, 'sale_price' => null, 'stock' => 5],
+                    ['size' => 'M', 'color' => 'Red', 'sku' => 'SKU-COLOR-TEE-M-RED', 'price' => 45, 'sale_price' => 35, 'stock' => 3],
+                ]),
+                'main_image' => UploadedFile::fake()->image('main.jpg', 800, 800),
+                'additional_images' => [
+                    UploadedFile::fake()->image('shared.jpg', 800, 800),
+                ],
+                'color_images' => [
+                    'Black' => [UploadedFile::fake()->image('black.jpg', 800, 800)],
+                    'Red' => [UploadedFile::fake()->image('red.jpg', 800, 800)],
+                ],
+            ])
+            ->assertRedirect(route('admin.products.index'));
+
+        $product = Product::query()->where('slug', 'color-tee')->first();
+        $this->assertNotNull($product);
+        $this->assertSame(3, $product->images()->count());
+
+        $black = $product->colors()->where('name', 'Black')->first();
+        $red = $product->colors()->where('name', 'Red')->first();
+        $this->assertNotNull($black);
+        $this->assertNotNull($red);
+
+        $this->assertSame(1, $product->images()->whereNull('product_color_id')->count());
+        $this->assertSame(1, $product->images()->where('product_color_id', $black->id)->count());
+        $this->assertSame(1, $product->images()->where('product_color_id', $red->id)->count());
+
+        $this->get(route('products.show', ['product' => 'color-tee']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Product/Pages/Show')
+                ->has('product.imagesByColor.Black', 1)
+                ->has('product.imagesByColor.Red', 1)
+                ->has('product.sharedImages')
+                ->where('product.variants.1.effectivePrice', 35)
+            );
+    }
+
     public function test_unlaunched_product_is_hidden_on_storefront(): void
     {
         $category = Category::factory()->create();
